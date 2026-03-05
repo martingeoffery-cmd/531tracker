@@ -369,7 +369,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 <body>
 <div class="hdr"><h1>5/3/1 HYBRID TRACKER</h1><div class="sub">WENDLER × COULSON FITNESS</div><div class="sess-clock" id="sess-clock"><div class="sc-dot"></div><span class="sc-time" id="sess-clock-time">0:00</span></div></div>
 <div class="toast" id="toast"></div>
-<span id="disp-sn" style="display:none;">5/3/1 Log Workout</span>
+<span id="disp-sn-hidden" style="display:none;">5/3/1 Log Workout</span>
 
 <!-- SYNC MODAL -->
 
@@ -383,7 +383,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <button class="btn pur" onclick="launchHealth()">❤️ Apple Health Only</button>
       <button class="btn sec" onclick="closeModal()">Skip</button>
     </div>
-    <p style="font-size:11px;color:var(--slate);text-align:center;line-height:1.6;">Shortcut setup in <strong style="color:var(--pink-l)">Settings → Apple Health</strong></p>
   </div>
 </div>
 
@@ -669,7 +668,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <div class="ct">Workout History</div>
     <div id="log-list"></div>
   </div>
-  <button class="btn red" onclick="clearLog()" style="margin-top:4px;">🗑 Clear All History</button>
 </div>
 
 <!-- ===== RECOVERY ===== -->
@@ -685,19 +683,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div id="readiness-pct" style="font-size:10px;color:var(--slate);letter-spacing:1px;">/100</div>
     </div>
     <div id="readiness-label" style="font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:2px;color:var(--green);margin-bottom:6px;">AWAITING DATA</div>
-    <div id="readiness-rec" style="font-size:12px;color:var(--slate);line-height:1.6;max-width:260px;margin:0 auto;">Log your metrics below or fetch from Apple Health to get your readiness score.</div>
+    <div id="readiness-rec" style="font-size:12px;color:var(--slate);line-height:1.6;max-width:260px;margin:0 auto;">Enter your metrics below and tap Calculate.</div>
   </div>
-
-  <p style="font-size:11px;color:var(--slate);text-align:center;margin-bottom:14px;line-height:1.7;padding:0 10px;">
-    Enter your metrics below and tap <strong style="color:var(--green)">Calculate</strong> to get your readiness score.<br>
-    Check Apple Health app for your HRV and RHR values.
-  </p>
 
   <!-- MANUAL METRICS -->
 
   <div class="card">
     <div class="ct pk">Log Today's Metrics</div>
-    <p style="font-size:11px;color:var(--slate);margin-bottom:12px;">Enter manually if not using Health fetch. Values auto-save.</p>
 
 ```
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
@@ -867,7 +859,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
   <!-- 3. STRAVA -->
 
-  <div class="acc-item">
   <div class="acc-item">
     <div class="acc-hdr" onclick="toggleAcc('acc-strava')">
       <span>🟠 Strava Integration</span><span class="acc-arrow" id="arrow-acc-strava">▼</span>
@@ -2144,9 +2135,7 @@ function loadSettingsUI(){
   Object.entries(ids).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.value=S.tms[k];});
   const cyc=document.getElementById('s-cyc');if(cyc)cyc.value=S.cycle;
   const snI=document.getElementById('sn-input');if(snI)snI.value=S.shortcutName;
-  const rsnI=document.getElementById('reader-sn-input');if(rsnI)rsnI.value=S.readerShortcutName||'5/3/1 Health Reader';
   const dSN=document.getElementById('disp-sn');if(dSN)dSN.textContent=S.shortcutName;
-  const dRSN=document.getElementById('disp-reader-sn');if(dRSN)dRSN.textContent=S.readerShortcutName||'5/3/1 Health Reader';
   renderSettingsTMDisplay();
   loadScheduleSettings();
 }
