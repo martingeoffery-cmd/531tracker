@@ -17,7 +17,7 @@
   --dg:#0a3d1f;--mg:#15803d;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Rajdhani',sans-serif;background:linear-gradient(160deg,var(--mg) 0%,var(--dg) 100%);min-height:100vh;color:white;padding-bottom:90px;}
+body{font-family:'Rajdhani',sans-serif;background:linear-gradient(160deg,var(--mg) 0%,var(--dg) 100%);min-height:100vh;color:white;margin:0;padding-bottom:80px;}
 .hdr{background:rgba(0,0,0,0.4);padding:14px 16px 10px;text-align:center;border-bottom:2px solid var(--gold);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
 .hdr h1{font-family:'Oswald',sans-serif;font-size:20px;color:var(--gold);letter-spacing:3px;}
 .hdr .sub{font-size:10px;color:var(--slate);letter-spacing:2px;margin-top:1px;}
@@ -275,11 +275,99 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 .rec-icon{font-size:36px;margin-bottom:8px;}
 .rec-title{font-family:‘Oswald’,sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px;}
 .rec-detail{font-size:12px;color:var(–slate);line-height:1.7;}
+
+/* ─── REST TIMER ─── */
+.rest-timer{background:rgba(0,0,0,0.5);border:2px solid var(–blue);border-radius:14px;padding:16px;margin-bottom:12px;text-align:center;position:relative;overflow:hidden;}
+.rest-timer::before{content:’’;position:absolute;inset:0;background:linear-gradient(135deg,rgba(59,130,246,0.08),transparent);pointer-events:none;}
+.rt-label{font-size:10px;color:#93c5fd;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.rt-ring{width:80px;height:80px;margin:0 auto 10px;position:relative;}
+.rt-ring svg{width:80px;height:80px;transform:rotate(-90deg);}
+.rt-bg{fill:none;stroke:rgba(59,130,246,0.2);stroke-width:5;}
+.rt-fill{fill:none;stroke:#3B82F6;stroke-width:5;stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear,stroke 0.5s;}
+.rt-fill.done{stroke:var(–green);}
+.rt-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:‘Oswald’,sans-serif;font-size:22px;font-weight:700;color:white;}
+.rt-msg{font-family:‘Oswald’,sans-serif;font-size:13px;letter-spacing:2px;color:#93c5fd;}
+.rt-msg.go{color:var(–green);animation:pulse 1s infinite;}
+.rt-btns{display:flex;gap:8px;margin-top:10px;}
+.rt-btn{flex:1;padding:8px;border:none;border-radius:6px;font-family:‘Oswald’,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;}
+.rt-skip{background:rgba(255,255,255,0.1);color:var(–slate);}
+.rt-add{background:rgba(59,130,246,0.2);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);}
+
+/* ─── SESSION CLOCK ─── */
+.sess-clock{display:none;align-items:center;gap:6px;background:rgba(0,0,0,0.3);border-radius:6px;padding:3px 10px;position:absolute;right:14px;top:14px;}
+.sess-clock.active{display:flex;}
+.sc-dot{width:6px;height:6px;border-radius:50%;background:var(–green);animation:pulse 2s infinite;}
+.sc-time{font-family:‘Oswald’,sans-serif;font-size:13px;color:var(–green);letter-spacing:1px;}
+
+/* ─── PR BADGE ─── */
+.pr-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,rgba(255,215,0,0.25),rgba(251,146,60,0.2));border:1px solid rgba(255,215,0,0.5);border-radius:6px;padding:2px 8px;font-family:‘Oswald’,sans-serif;font-size:10px;color:var(–gold);letter-spacing:1px;margin-left:4px;animation:prPop 0.4s ease;}
+@keyframes prPop{0%{transform:scale(0.7);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+
+/* ─── SVG TREND CHART ─── */
+.trend-chart-wrap{background:rgba(0,0,0,0.25);border-radius:10px;padding:10px 6px 6px;margin-bottom:10px;overflow:hidden;}
+.trend-svg{width:100%;overflow:visible;}
+.tc-grid{stroke:rgba(255,255,255,0.06);stroke-width:1;}
+.tc-line{fill:none;stroke:#93c5fd;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+.tc-area{fill:url(#tcGrad);opacity:0.5;}
+.tc-dot{fill:#FFD700;stroke:#1a1a1a;stroke-width:1.5;r:4;cursor:pointer;}
+.tc-dot:hover{r:6;}
+.tc-label{font-family:‘Rajdhani’,sans-serif;font-size:10px;fill:#CBD5E1;text-anchor:middle;}
+.tc-ylabel{font-family:‘Oswald’,sans-serif;font-size:9px;fill:#CBD5E1;text-anchor:end;}
+.tc-val{font-family:‘Oswald’,sans-serif;font-size:11px;fill:#93c5fd;text-anchor:middle;}
+.tc-tooltip{pointer-events:none;}
+
+/* ─── HEADER LIVE INDICATOR ─── */
+.hdr{position:relative;}
+
+/* ─── IMPROVED LOG ENTRY ─── */
+.le-vol-bar{height:3px;border-radius:2px;background:linear-gradient(90deg,var(–blue),var(–green));margin-top:8px;transition:width 0.6s ease;}
+
+/* ─── SCHEDULE SELECTOR ─── */
+.sched-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.sched-btn{background:rgba(0,0,0,0.3);border:2px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 8px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.sched-btn.active{border-color:var(–gold);background:rgba(255,215,0,0.1);}
+.sched-icon{font-size:20px;margin-bottom:4px;}
+.sched-name{font-family:‘Oswald’,sans-serif;font-size:13px;color:white;letter-spacing:1px;margin-bottom:2px;}
+.sched-src{font-size:9px;color:var(–slate);letter-spacing:1px;text-transform:uppercase;}
+/* ─── DAY PICKER ─── */
+.day-pick-wrap{margin-bottom:12px;}
+.day-pick-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px;}
+.dp-btn{background:rgba(0,0,0,0.3);border:2px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;text-align:center;cursor:pointer;flex-shrink:0;min-width:90px;transition:all 0.2s;}
+.dp-btn.active{border-color:var(–green);background:rgba(74,222,128,0.1);}
+.dp-btn.today{border-color:var(–gold);}
+.dp-name{font-family:‘Oswald’,sans-serif;font-size:12px;color:white;letter-spacing:1px;margin-bottom:3px;}
+.dp-lifts{font-size:10px;color:var(–slate);}
+.dp-lifts .lbadge{display:inline-block;background:rgba(74,222,128,0.15);border:1px solid rgba(74,222,128,0.3);border-radius:3px;padding:1px 5px;font-size:9px;color:var(–green);margin:1px;}
+.sched-note{font-size:11px;color:var(–slate);background:rgba(0,0,0,0.25);border-radius:6px;padding:8px 10px;line-height:1.6;margin-bottom:8px;}
+/* ─── AMRAP COACH BOX ─── */
+.amrap-box{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:10px 12px;margin-bottom:10px;}
+.lq-bar{display:flex;gap:5px;align-items:center;margin-bottom:12px;background:rgba(0,0,0,0.3);border-radius:8px;padding:10px 12px;}
+.lq-step{display:flex;align-items:center;gap:5px;}
+.lq-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:‘Oswald’,sans-serif;font-size:11px;font-weight:700;flex-shrink:0;}
+.lq-dot.done{background:var(–green);color:#1a1a1a;}
+.lq-dot.cur{background:var(–gold);color:#1a1a1a;animation:pulse 2s infinite;}
+.lq-dot.next{background:rgba(255,255,255,0.15);color:var(–slate);}
+.lq-label{font-size:11px;color:var(–slate);}
+.lq-label.cur{color:white;font-weight:700;}
+.lq-arrow{color:var(–slate);font-size:10px;margin:0 3px;}
+/* ─── LIFT TRANSITION CARD ─── */
+.lift-transition{background:rgba(0,0,0,0.4);border:2px solid var(–green);border-radius:14px;padding:24px 16px;text-align:center;}
+.lt-check{font-size:48px;margin-bottom:8px;animation:prPop 0.5s ease;}
+.lt-done{font-family:‘Oswald’,sans-serif;font-size:14px;color:var(–green);letter-spacing:2px;margin-bottom:4px;}
+.lt-stats{font-size:13px;color:var(–slate);margin-bottom:20px;line-height:1.7;}
+.lt-next-label{font-size:11px;color:var(–slate);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.lt-next-name{font-family:‘Oswald’,sans-serif;font-size:22px;color:var(–gold);letter-spacing:2px;margin-bottom:16px;}
+/* ─── MULTI-LIFT SESSION BADGE ─── */
+.ml-badge{background:rgba(59,130,246,0.2);border:1px solid rgba(59,130,246,0.4);border-radius:5px;padding:2px 7px;font-size:10px;color:#93c5fd;letter-spacing:1px;display:inline-block;margin-left:4px;}
+
+.amrap-box .ab-title{font-family:‘Oswald’,sans-serif;font-size:11px;color:#93c5fd;letter-spacing:2px;margin-bottom:4px;}
+.amrap-box .ab-text{font-size:12px;color:var(–slate);line-height:1.6;}
+.amrap-box strong{color:white;}
 </style>
 
 </head>
 <body>
-<div class="hdr"><h1>5/3/1 HYBRID TRACKER</h1><div class="sub">WENDLER × COULSON FITNESS</div></div>
+<div class="hdr"><h1>5/3/1 HYBRID TRACKER</h1><div class="sub">WENDLER × COULSON FITNESS</div><div class="sess-clock" id="sess-clock"><div class="sc-dot"></div><span class="sc-time" id="sess-clock-time">0:00</span></div></div>
 <div class="toast" id="toast"></div>
 <span id="disp-sn" style="display:none;">5/3/1 Log Workout</span>
 
@@ -293,10 +381,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
       <button class="btn grn" onclick="launchBoth()">⚡ SYNC TO HEALTH + STRAVA</button>
       <button class="btn pur" onclick="launchHealth()">❤️ Apple Health Only</button>
-      <button class="btn or-btn" onclick="launchAutoLogger(S.log[0])">📋 AUTO-LOG TO HEALTH (No Prompts)</button>
       <button class="btn sec" onclick="closeModal()">Skip</button>
     </div>
-    <p style="font-size:11px;color:var(--slate);text-align:center;line-height:1.6;">Auto-Log requires <strong style="color:var(--green)">Shortcut 3</strong> from Settings → Apple Health.</p>
+    <p style="font-size:11px;color:var(--slate);text-align:center;line-height:1.6;">Shortcut setup in <strong style="color:var(--pink-l)">Settings → Apple Health</strong></p>
   </div>
 </div>
 
@@ -370,41 +457,67 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
           <div class="stb-sub">Coulson Metabolic Circuit</div>
         </div>
       </div>
-      <div id="strength-opts">
-        <div class="ct or" style="margin-bottom:10px;">Select Week & Lift</div>
-        <div class="wtabs">
-          <div class="wt active" onclick="setWeek(1,this)">WK 1<br><span style="font-size:9px">5 REPS</span></div>
-          <div class="wt" onclick="setWeek(2,this)">WK 2<br><span style="font-size:9px">3 REPS</span></div>
-          <div class="wt" onclick="setWeek(3,this)">WK 3<br><span style="font-size:9px">5/3/1</span></div>
-          <div class="wt" onclick="setWeek(4,this)">DELOAD<br><span style="font-size:9px">WK 4</span></div>
-        </div>
-        <div class="lch">
-          <div class="lc active" onclick="setLift('squat',this)">Squat</div>
-          <div class="lc" onclick="setLift('bench',this)">Bench</div>
-          <div class="lc" onclick="setLift('dead',this)">Deadlift</div>
-          <div class="lc" onclick="setLift('press',this)">Press</div>
-        </div>
-        <div class="card" style="margin-bottom:0;">
-          <div class="ct" id="ph0-title">SQUAT — WEEK 1 <span class="cbadge">CYCLE 1</span></div>
-          <table class="stbl"><thead><tr><th>SET</th><th>%TM</th><th>WEIGHT</th><th>REPS</th></tr></thead><tbody id="prescrip-body"></tbody></table>
-          <div class="ir2"><span class="il">Training Max</span><span class="iv" id="ph0-tm">— lbs</span></div>
-        </div>
-      </div>
-      <div id="mrut-opts" style="display:none;">
-        <div class="ct or" style="margin-bottom:10px;">Select MRUT Workout</div>
-        <div class="mrut-sel">
-          <div class="mrut-btn active" id="mrut-w2" onclick="setMRUT(2,this)">
-            <div class="mb-name">WORKOUT 2</div>
-            <div class="mb-sub">3 circuits · lower + push/pull</div>
-          </div>
-          <div class="mrut-btn" id="mrut-w4" onclick="setMRUT(4,this)">
-            <div class="mb-name">WORKOUT 4</div>
-            <div class="mb-sub">3 circuits · hips + row + step</div>
-          </div>
-        </div>
+
+```
+  <!-- STRENGTH OPTIONS -->
+  <div id="strength-opts">
+    <!-- Week Selector -->
+    <div class="ct or" style="margin-bottom:10px;">Select Week</div>
+    <div class="wtabs">
+      <div class="wt active" onclick="setWeek(1,this)">WK 1<br><span style="font-size:9px">5 REPS</span></div>
+      <div class="wt" onclick="setWeek(2,this)">WK 2<br><span style="font-size:9px">3 REPS</span></div>
+      <div class="wt" onclick="setWeek(3,this)">WK 3<br><span style="font-size:9px">5/3/1</span></div>
+      <div class="wt" onclick="setWeek(4,this)">DELOAD<br><span style="font-size:9px">WK 4</span></div>
+    </div>
+
+    <!-- SCHEDULE DAY PICKER (shown for non-custom schedules) -->
+    <div id="sched-day-section">
+      <div class="ct or" style="margin-bottom:8px;">Today's Training <span id="sched-name-badge" class="cbadge" style="color:var(--blue);border-color:rgba(59,130,246,0.4);background:rgba(59,130,246,0.1);">4-Day</span></div>
+      <div class="day-pick-wrap">
+        <div class="day-pick-row" id="day-pick-row"></div>
+        <div class="sched-note" id="sched-day-note"></div>
       </div>
     </div>
-    <button class="btn grn" onclick="startSession()" style="margin-bottom:12px;">🔥 START SESSION</button>
+
+    <!-- MANUAL LIFT OVERRIDE (shown for custom + as override option) -->
+    <div id="manual-lift-section">
+      <div class="ct or" style="margin-bottom:10px;">Select Lift</div>
+      <div class="lch">
+        <div class="lc active" onclick="setLift('squat',this)">Squat</div>
+        <div class="lc" onclick="setLift('bench',this)">Bench</div>
+        <div class="lc" onclick="setLift('dead',this)">Deadlift</div>
+        <div class="lc" onclick="setLift('press',this)">Press</div>
+      </div>
+    </div>
+
+    <!-- PRESCRIPTION PREVIEW -->
+    <div class="card" style="margin-bottom:0;" id="prescrip-card">
+      <div class="ct" id="ph0-title">SQUAT — WEEK 1 <span class="cbadge">CYCLE 1</span></div>
+      <table class="stbl"><thead><tr><th>SET</th><th>%TM</th><th>WEIGHT</th><th>REPS</th></tr></thead><tbody id="prescrip-body"></tbody></table>
+      <div class="ir2"><span class="il">Training Max</span><span class="iv" id="ph0-tm">— lbs</span></div>
+      <!-- Multi-lift day: show all lifts -->
+      <div id="multi-lift-preview" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- MRUT OPTIONS -->
+  <div id="mrut-opts" style="display:none;">
+    <div class="ct or" style="margin-bottom:10px;">Select MRUT Workout</div>
+    <div class="mrut-sel">
+      <div class="mrut-btn active" id="mrut-w2" onclick="setMRUT(2,this)">
+        <div class="mb-name">WORKOUT 2</div>
+        <div class="mb-sub">3 circuits · lower + push/pull</div>
+      </div>
+      <div class="mrut-btn" id="mrut-w4" onclick="setMRUT(4,this)">
+        <div class="mb-name">WORKOUT 4</div>
+        <div class="mb-sub">3 circuits · hips + row + step</div>
+      </div>
+    </div>
+  </div>
+</div>
+<button class="btn grn" onclick="startSession()" style="margin-bottom:12px;">🔥 START SESSION</button>
+```
+
   </div>
 
   <!-- PH1: WARMUP -->
@@ -435,6 +548,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div class="sl-log" id="set-logger">
         <div class="sc-cnt" id="set-counter">SET 1 OF 3</div>
         <div class="sc-pre" id="set-prescrip">Prescribed: <span>135 lbs × 5</span></div>
+              <div class="amrap-box" id="amrap-coach" style="display:none;">
+                <div class="ab-title">📈 AMRAP SET — GO FOR MAX QUALITY REPS</div>
+                <div class="ab-text" id="amrap-coach-text">Stop <strong>1–2 reps before form breaks</strong>. Log every rep you actually complete.</div>
+              </div>
         <div class="si-grid">
           <div class="si-box"><label>WEIGHT (lbs)</label><input type="number" class="wi" id="inp-w" inputmode="decimal" placeholder="135"></div>
           <div class="si-box"><label>REPS</label><input type="number" class="ri" id="inp-r" inputmode="decimal" placeholder="5"></div>
@@ -452,9 +569,38 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <button class="btn" onclick="logSet()">LOG SET →</button>
       </div>
       <div id="logged-sets-wrap" style="margin-top:10px;"></div>
+      <!-- REST TIMER (shown after each set) -->
+      <div class="rest-timer" id="rest-timer" style="display:none;">
+        <div class="rt-label">⏱ REST TIMER</div>
+        <div class="rt-ring">
+          <svg viewBox="0 0 80 80"><circle class="rt-bg" cx="40" cy="40" r="35"/><circle class="rt-fill" id="rt-fill" cx="40" cy="40" r="35"/></svg>
+          <div class="rt-num" id="rt-num">3:00</div>
+        </div>
+        <div class="rt-msg" id="rt-msg">REST UP</div>
+        <div class="rt-btns">
+          <button class="rt-btn rt-skip" onclick="skipRest()">SKIP REST</button>
+          <button class="rt-btn rt-add" onclick="addRestTime(60)">+60s</button>
+        </div>
+      </div>
       <button class="btn grn" id="done-main-btn" onclick="doneMainLift()" style="display:none;margin-top:10px;">✓ MAIN LIFT DONE → ACCESSORIES</button>
     </div>
     <button class="btn sec" onclick="cancelSession()" style="margin-bottom:12px;font-size:12px;">↩ Back</button>
+  </div>
+
+  <!-- PH2B: LIFT TRANSITION (between lifts on multi-lift days) -->
+
+  <div class="phase" id="ph2b">
+    <div class="card">
+      <div class="lift-transition" id="lt-card">
+        <div class="lt-check">✅</div>
+        <div class="lt-done" id="lt-done-label">LIFT 1 COMPLETE</div>
+        <div class="lt-stats" id="lt-stats"></div>
+        <div class="lt-next-label">NEXT UP</div>
+        <div class="lt-next-name" id="lt-next-name">Bench Press</div>
+        <button class="btn grn" onclick="advanceLiftQueue()">🏋️ START NEXT LIFT →</button>
+      </div>
+    </div>
+    <button class="btn sec" onclick="skipToAccessories()" style="margin-top:8px;font-size:12px;">Skip to Accessories →</button>
   </div>
 
   <!-- PH3: ACCESSORIES (Coulson prescribed + extras) -->
@@ -542,21 +688,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <div id="readiness-rec" style="font-size:12px;color:var(--slate);line-height:1.6;max-width:260px;margin:0 auto;">Log your metrics below or fetch from Apple Health to get your readiness score.</div>
   </div>
 
-  <!-- FETCH / PASTE BUTTONS -->
-
-  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px;">
-    <button class="btn pur" onclick="runHealthShortcut()" id="fetch-btn">
-      ❤️ RUN HEALTH READER SHORTCUT
-    </button>
-    <button class="btn grn" onclick="pasteFromClipboard()" id="paste-btn" style="display:none;">
-      📋 PASTE HEALTH DATA & CALCULATE
-    </button>
-  </div>
-  <div id="fetch-status" style="font-size:11px;color:var(--slate);text-align:center;margin-bottom:14px;line-height:1.7;padding:0 10px;">
-    Tap above → Shortcut runs → returns here → tap Paste.<br>
-    <strong style="color:var(--pink-l)">Setup in Settings → Apple Health & Shortcuts</strong>
-  </div>
-  <div id="paste-result" style="display:none;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:var(--green);text-align:center;"></div>
+  <p style="font-size:11px;color:var(--slate);text-align:center;margin-bottom:14px;line-height:1.7;padding:0 10px;">
+    Enter your metrics below and tap <strong style="color:var(--green)">Calculate</strong> to get your readiness score.<br>
+    Check Apple Health app for your HRV and RHR values.
+  </p>
 
   <!-- MANUAL METRICS -->
 
@@ -642,6 +777,45 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
   <!-- ACCORDION SECTIONS -->
 
+  <!-- 0. TRAINING SCHEDULE -->
+
+  <div class="acc-item">
+    <div class="acc-hdr" onclick="toggleAcc('acc-schedule')">
+      <span>📅 Training Schedule</span><span class="acc-arrow" id="arrow-acc-schedule">▼</span>
+    </div>
+    <div class="acc-body" id="acc-schedule" style="display:none;">
+      <p style="font-size:12px;color:var(--slate);line-height:1.6;margin-bottom:12px;">Choose how many days/week you lift. The app will pre-load the correct lifts for each session. Source: <em>5/3/1 2nd Edition + Beyond 5/3/1</em>.</p>
+      <div class="sched-grid">
+        <div class="sched-btn" id="sb-4day" onclick="setSchedule('4day',this)">
+          <div class="sched-icon">4️⃣</div>
+          <div class="sched-name">4 DAY</div>
+          <div class="sched-src">Beyond 5/3/1 T1</div>
+        </div>
+        <div class="sched-btn" id="sb-3day" onclick="setSchedule('3day',this)">
+          <div class="sched-icon">3️⃣</div>
+          <div class="sched-name">3 DAY</div>
+          <div class="sched-src">Beyond 5/3/1 T2</div>
+        </div>
+        <div class="sched-btn" id="sb-3rot" onclick="setSchedule('3rot',this)">
+          <div class="sched-icon">🔄</div>
+          <div class="sched-name">3 DAY ROTATING</div>
+          <div class="sched-src">Beyond 5/3/1 T4</div>
+        </div>
+        <div class="sched-btn" id="sb-2day" onclick="setSchedule('2day',this)">
+          <div class="sched-icon">2️⃣</div>
+          <div class="sched-name">2 DAY</div>
+          <div class="sched-src">2nd Ed. / Beyond T8</div>
+        </div>
+        <div class="sched-btn" id="sb-custom" onclick="setSchedule('custom',this)" style="grid-column:span 2;">
+          <div class="sched-icon">⚙️</div>
+          <div class="sched-name">CUSTOM</div>
+          <div class="sched-src">Pick lift manually each session</div>
+        </div>
+      </div>
+      <div id="sched-detail-box" style="background:rgba(0,0,0,0.25);border-radius:8px;padding:12px;margin-top:4px;font-size:12px;color:var(--slate);line-height:1.8;"></div>
+    </div>
+  </div>
+
   <!-- 1. TRAINING CONFIG -->
 
   <div class="acc-item">
@@ -670,105 +844,30 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div class="acc-body" id="acc-health" style="display:none;">
       <div class="ir">
-        <label>Workout Log Shortcut Name</label>
+        <label>Workout Shortcut Name</label>
         <div class="sn-row">
           <input type="text" id="sn-input" value="5/3/1 Log Workout">
           <button class="btn sm" onclick="saveSN()">SAVE</button>
         </div>
       </div>
-      <div class="ir" style="margin-top:4px;">
-        <label>Health Reader Shortcut Name</label>
-        <div class="sn-row">
-          <input type="text" id="reader-sn-input" value="5/3/1 Health Reader">
-          <button class="btn sm" onclick="saveReaderSN()">SAVE</button>
-        </div>
-      </div>
+      <p style="font-size:11px;color:var(--slate);line-height:1.7;margin-bottom:12px;">Must match exactly what you name it in the Shortcuts app.</p>
       <div class="div"></div>
-
-```
-  <!-- SHORTCUT 1 -->
-  <div style="background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.3);border-radius:10px;padding:12px;margin-bottom:14px;">
-    <div style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--pink-l);letter-spacing:1px;margin-bottom:10px;">📋 SHORTCUT 1 — MORNING HEALTH READER</div>
-    <p style="font-size:11px;color:var(--slate);line-height:1.7;margin-bottom:10px;">Reads HRV, RHR and Sleep from Apple Health, builds a JSON string, copies to clipboard, then opens this app. You tap "Paste" and your Recovery score calculates automatically.</p>
-
-    <div class="step"><div class="snum">1</div><div class="stc"><div class="stt">Open Shortcuts app → tap + → name it:</div><div class="scode" id="disp-reader-sn">5/3/1 Health Reader</div></div></div>
-      <div class="sbox2">Type: <strong style="color:var(--green)">Heart Rate Variability (SDNN)</strong><br>Sort by: Start Date, Order: Latest First<br>Limit: <strong style="color:var(--green)">1</strong><br>→ Rename output variable: <strong style="color:var(--gold)">HRVSample</strong></div>
-    </div></div>
-
-    <div class="step"><div class="snum">3</div><div class="stc"><div class="stt">Add action: Get Details of Health Sample</div>
-      <div class="sbox2">Health Sample: <strong style="color:var(--gold)">HRVSample</strong><br>Detail: <strong style="color:var(--green)">Value</strong><br>→ Rename output: <strong style="color:var(--gold)">HRVValue</strong></div>
-    </div></div>
-
-    <div class="step"><div class="snum">4</div><div class="stc"><div class="stt">Repeat steps 2–3 for Resting Heart Rate</div>
-      <div class="sbox2">Type: <strong style="color:var(--green)">Resting Heart Rate</strong><br>Output variable: <strong style="color:var(--gold)">RHRValue</strong></div>
-    </div></div>
-
-    <div class="step"><div class="snum">5</div><div class="stc"><div class="stt">Repeat for Sleep Analysis</div>
-      <div class="sbox2">Type: <strong style="color:var(--green)">Sleep Analysis</strong><br>Sort: Latest First, Limit: 1<br>Get Detail: <strong style="color:var(--green)">Duration</strong> (returns seconds)<br>Add action: <strong style="color:var(--gold)">Calculate</strong> → Duration ÷ 3600<br>Output variable: <strong style="color:var(--gold)">SleepHours</strong></div>
-    </div></div>
-
-    <div class="step"><div class="snum">6</div><div class="stc"><div class="stt">Add action: Text</div>
-      <div class="sbox2" style="font-family:monospace;font-size:11px;line-height:1.8;">{"hrv":<strong style="color:var(--gold)">HRVValue</strong>,"rhr":<strong style="color:var(--gold)">RHRValue</strong>,"sleep":<strong style="color:var(--gold)">SleepHours</strong>,"source":"apple_health","date":"<strong style="color:var(--gold)">Current Date</strong>"}<br><br><span style="color:var(--slate);">(Insert each variable by tapping the field and selecting from the variable list)</span></div>
-    </div></div>
-
-    <div class="step"><div class="snum">7</div><div class="stc"><div class="stt">Add action: Copy to Clipboard</div>
-      <div class="sbox2">Input: the <strong style="color:var(--gold)">Text</strong> from step 6</div>
-    </div></div>
-
-    <div class="step"><div class="snum">8</div><div class="stc"><div class="stt">Add action: Open URLs</div>
-      <div class="sbox2" id="app-url-display">URL: <strong style="color:var(--green)">https://your-netlify-app.netlify.app</strong><br><span style="color:var(--slate);">(or your local file path if using offline)</span></div>
-    </div></div>
-
-    <div class="step"><div class="snum">9</div><div class="stc"><div class="stt">Save shortcut. Test it:</div></div></div>
-    <button class="btn pur" onclick="testReaderSC()">❤️ TEST HEALTH READER</button>
-  </div>
-
-  <!-- SHORTCUT 2 -->
-  <div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:12px;margin-bottom:14px;">
-    <div style="font-family:'Oswald',sans-serif;font-size:13px;color:#93c5fd;letter-spacing:1px;margin-bottom:10px;">⏰ SHORTCUT 2 — MORNING AUTOMATION</div>
-    <p style="font-size:11px;color:var(--slate);line-height:1.7;margin-bottom:10px;">Runs Shortcut 1 automatically every morning. No tapping required — wake up, see your readiness score already waiting.</p>
-    <div class="step"><div class="snum">1</div><div class="stc"><div class="stt">Open Shortcuts → Automation tab → tap +</div></div></div>
-    <div class="step"><div class="snum">2</div><div class="stc"><div class="stt">Choose: Time of Day</div>
-      <div class="sbox2">Time: <strong style="color:var(--green)">6:30 AM</strong> (or your wake time)<br>Repeat: <strong style="color:var(--green)">Daily</strong><br>Run After Confirmation: <strong style="color:var(--orange)">OFF</strong> (runs silently)</div>
-    </div></div>
-    <div class="step"><div class="snum">3</div><div class="stc"><div class="stt">Add action: Run Shortcut</div>
-      <div class="sbox2">Shortcut: <strong style="color:var(--gold)" id="auto-sc-name">5/3/1 Health Reader</strong></div>
-    </div></div>
-    <div class="step"><div class="snum">4</div><div class="stc"><div class="stt">Save. Every morning at your wake time, Health data is read and copied to clipboard automatically. Open the app → Recovery tab → tap Paste.</div></div></div>
-  </div>
-
-  <!-- SHORTCUT 3 -->
-  <div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:10px;padding:12px;margin-bottom:14px;">
-    <div style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--green);letter-spacing:1px;margin-bottom:10px;">🏋️ SHORTCUT 3 — POST-WORKOUT AUTO-LOGGER</div>
-    <p style="font-size:11px;color:var(--slate);line-height:1.7;margin-bottom:10px;">After you finish a session in this app, your workout data is automatically copied to clipboard. This Shortcut reads it and logs to Apple Health with zero prompts — no duration/calorie questions.</p>
-    <div class="step"><div class="snum">1</div><div class="stc"><div class="stt">Open Shortcuts → tap + → name it:</div><div class="scode">5/3/1 Auto Logger</div></div></div>
-    <div class="step"><div class="snum">2</div><div class="stc"><div class="stt">Add action: Get Clipboard</div>
-      <div class="sbox2">→ Rename output: <strong style="color:var(--gold)">WorkoutJSON</strong></div>
-    </div></div>
-    <div class="step"><div class="snum">3</div><div class="stc"><div class="stt">Add action: Get Dictionary from Input</div>
-      <div class="sbox2">Input: <strong style="color:var(--gold)">WorkoutJSON</strong><br>→ Rename output: <strong style="color:var(--gold)">WorkoutData</strong></div>
-    </div></div>
-    <div class="step"><div class="snum">4</div><div class="stc"><div class="stt">Add action: Get Value for Key in Dictionary</div>
-      <div class="sbox2">Dictionary: <strong style="color:var(--gold)">WorkoutData</strong><br>Key: <strong style="color:var(--green)">duration</strong> → output: <strong style="color:var(--gold)">Duration</strong><br><br>Repeat for key: <strong style="color:var(--green)">calories</strong> → output: <strong style="color:var(--gold)">Calories</strong></div>
-    </div></div>
-    <div class="step"><div class="snum">5</div><div class="stc"><div class="stt">Add action: Log Workout (Health)</div>
-      <div class="sbox2">Activity Type: <strong style="color:var(--green)">Traditional Strength Training</strong><br>Duration: <strong style="color:var(--gold)">Duration</strong> variable (minutes)<br>Active Energy: <strong style="color:var(--gold)">Calories</strong> variable<br>Date: <strong style="color:var(--green)">Current Date</strong></div>
-    </div></div>
-    <div class="step"><div class="snum">6</div><div class="stc"><div class="stt">Add action: Show Notification</div>
-      <div class="sbox2">Title: <strong style="color:var(--green)">Workout Logged ✓</strong><br>Body: <strong style="color:var(--gold)">Duration</strong> min · <strong style="color:var(--gold)">Calories</strong> kcal → Apple Health</div>
-    </div></div>
-    <div class="step"><div class="snum">7</div><div class="stc"><div class="stt">Save. In this app, finish a session → the sync modal now has "📋 Auto-Log to Health" which copies workout JSON to clipboard and launches this Shortcut automatically.</div></div></div>
-  </div>
-
-  <div class="div"></div>
-  <button class="btn pur" onclick="testSC()">⚡ TEST LOG SHORTCUT</button>
-</div>
-```
-
+      <p style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:10px;">Apple Health Setup</p>
+      <div class="step"><div class="snum">1</div><div class="stc"><div class="stt">Open Shortcuts → tap + → name it:</div><div class="scode" id="disp-sn">5/3/1 Log Workout</div></div></div>
+      <div class="step"><div class="snum">2</div><div class="stc"><div class="stt">Add "Log Workout" action</div>
+        <div class="sbox2">Activity: Traditional Strength Training<br>Duration + Calories: Ask Each Time<br>Date: Current Date</div>
+      </div></div>
+      <div class="step"><div class="snum">3</div><div class="stc"><div class="stt">Save & test:</div></div></div>
+      <button class="btn pur" onclick="testSC()" style="margin-bottom:14px;">⚡ TEST SHORTCUT</button>
+      <div class="div"></div>
+      <p style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:8px;">Finding HRV & RHR for Recovery Tab</p>
+      <p style="font-size:12px;color:var(--slate);line-height:1.7;">Open <strong style="color:white;">Health app</strong> → Browse → Heart → Heart Rate Variability (or Resting Heart Rate). Your latest reading is at the top. Enter it manually in the Recovery tab.</p>
+    </div>
   </div>
 
   <!-- 3. STRAVA -->
 
+  <div class="acc-item">
   <div class="acc-item">
     <div class="acc-hdr" onclick="toggleAcc('acc-strava')">
       <span>🟠 Strava Integration</span><span class="acc-arrow" id="arrow-acc-strava">▼</span>
@@ -893,13 +992,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   <button class="nb" onclick="showSc('workout',this)"><span class="ic">🏋️</span>WORKOUT</button>
   <button class="nb" onclick="showSc('log',this)"><span class="ic">📊</span>LOG</button>
   <button class="nb" onclick="showSc('recovery',this);loadRecoveryUI()"><span class="ic">💚</span>RECOVER</button>
-  <button class="nb" onclick="showSc('settings',this);loadSettingsUI()"><span class="ic">⚙️</span>SETTINGS</button>
+  <button class="nb" onclick="showSc('settings',this)"><span class="ic">⚙️</span>SETTINGS</button>
 </nav>
 
 <script>
 // ============ DATA ============
 const D_TMS={squat:205,bench:240,dead:255,press:120};
-let S={tms:{...D_TMS},cycle:1,week:1,lift:'squat',sessType:'strength',mrutNum:2,shortcutName:'5/3/1 Log Workout',log:[],session:null};
+let S={tms:{...D_TMS},cycle:1,week:1,lift:'squat',sessType:'strength',mrutNum:2,shortcutName:'5/3/1 Log Workout',schedule:'4day',scheduleDay:0,log:[],session:null};
 const SCHEMES={
   1:[{p:.65,r:5},{p:.75,r:5},{p:.85,r:'5+',amrap:true}],
   2:[{p:.70,r:3},{p:.80,r:3},{p:.90,r:'3+',amrap:true}],
@@ -908,6 +1007,62 @@ const SCHEMES={
 };
 const LL={squat:'Squat',bench:'Bench Press',dead:'Deadlift',press:'Standing Press'};
 const LCALS={squat:'350–500',bench:'250–350',dead:'350–500',press:'250–350'};
+
+// ============ SCHEDULES (from 5/3/1 2nd Ed + Beyond 5/3/1) ============
+const SCHEDULES={
+  '4day':{
+    name:'4 Day / Week', icon:'4️⃣',
+    source:'Beyond 5/3/1 — Template 1',
+    desc:'Classic Wendler split. One main lift per day. Best for dedicated lifters with 4 training days.',
+    days:[
+      {label:'Day A',subtitle:'Press',        lifts:['press'], coulson:'press'},
+      {label:'Day B',subtitle:'Deadlift',     lifts:['dead'],  coulson:'dead'},
+      {label:'Day C',subtitle:'Bench Press',  lifts:['bench'], coulson:'bench'},
+      {label:'Day D',subtitle:'Squat',        lifts:['squat'], coulson:'squat'},
+    ]
+  },
+  '3day':{
+    name:'3 Day / Week', icon:'3️⃣',
+    source:'Beyond 5/3/1 — Template 2',
+    desc:'Mon/Wed/Fri. Final day combines Deadlift + Press back-to-back. All four lifts hit each week.',
+    days:[
+      {label:'Day A',subtitle:'Squat',              lifts:['squat'],        coulson:'squat'},
+      {label:'Day B',subtitle:'Bench Press',        lifts:['bench'],        coulson:'bench'},
+      {label:'Day C',subtitle:'Deadlift + Press',   lifts:['dead','press'], coulson:'dead'},
+    ]
+  },
+  '3rot':{
+    name:'3 Day Rotating', icon:'🔄',
+    source:'Beyond 5/3/1 — Template 4',
+    desc:'3-week rotation. Each lift rotates through the schedule. Takes 3 weeks to hit all 4 lifts on each day.',
+    days:[
+      {label:'Week 1 · A',subtitle:'Squat',      lifts:['squat'], coulson:'squat'},
+      {label:'Week 1 · B',subtitle:'Bench Press',lifts:['bench'], coulson:'bench'},
+      {label:'Week 1 · C',subtitle:'Deadlift',   lifts:['dead'],  coulson:'dead'},
+      {label:'Week 2 · A',subtitle:'Press',      lifts:['press'], coulson:'press'},
+      {label:'Week 2 · B',subtitle:'Squat',      lifts:['squat'], coulson:'squat'},
+      {label:'Week 2 · C',subtitle:'Bench Press',lifts:['bench'], coulson:'bench'},
+      {label:'Week 3 · A',subtitle:'Deadlift',   lifts:['dead'],  coulson:'dead'},
+      {label:'Week 3 · B',subtitle:'Press',      lifts:['press'], coulson:'press'},
+      {label:'Week 3 · C',subtitle:'Squat',      lifts:['squat'], coulson:'squat'},
+    ]
+  },
+  '2day':{
+    name:'2 Day / Week', icon:'2️⃣',
+    source:'5/3/1 2nd Ed. Option 1 · Beyond T8',
+    desc:'Two paired sessions per week. Lower + upper body each day. Good for busy schedules. Both lifts done back-to-back.',
+    days:[
+      {label:'Day 1',subtitle:'Squat + Bench',    lifts:['squat','bench'], coulson:'squat'},
+      {label:'Day 2',subtitle:'Deadlift + Press', lifts:['dead','press'],  coulson:'dead'},
+    ]
+  },
+  'custom':{
+    name:'Custom', icon:'⚙️',
+    source:'Manual selection',
+    desc:'Pick your lift manually each session. Best if your schedule changes week to week.',
+    days:null
+  }
+};
 const WARMUP=[
   {n:'Jumping Jacks',r:'25 reps'},{n:'Glute Bridge',r:'20 reps'},
   {n:'Single Leg Glute Bridge',r:'15/leg'},{n:'Cat/Cow',r:'10 reps'},
@@ -919,105 +1074,149 @@ const WARMUP=[
 // Coulson Phase 1 — Prescribed Assistance
 // Structure: groups of exercises. Each group has type (straight/superset/circuit/finisher) and exercises
 const COULSON={
-  // Workout 1 - for Squat/Deadlift days (lower body strength)
-  lower:{
-    label:'Workout 1 — Lower Body Strength',
-    desc:'Coulson Phase 1 prescribed accessories following your main lift. Maintain rest times.',
+  // ─── SQUAT DAY ───
+  // Main lift: 5/3/1 Squat
+  // Accessories: Coulson W1 minus the deadlift block (A1).
+  // KB Front Squat & Goblet Squat stay — they're accessory/lighter squat volume, fine after main lift.
+  squat:{
+    label:'Squat Day — Coulson Accessories',
+    desc:'After your 5/3/1 Squat. KB Front Squat & Goblet Squat here are accessory volume at light weight — not your main lift.',
     groups:[
-      {type:'straight',label:'Straight Sets',items:[
-        {name:'Barbell Deadlift (controlled lowering)',pres:'4 × 6',sets:4,reps:'6',rest:'90–120 sec after each set',w:'',r:'6'}
+      {type:'superset',label:'Superset B — No rest after B1, 90s after B2',deletable:true,items:[
+        {name:'KB Front Squat',pres:'5 × 8',sets:5,reps:'8',rest:'No rest after',w:'',r:'8'},
+        {name:'BW Walking Lunges',pres:'5 × 15/leg',sets:5,reps:'15',rest:'90 sec',w:'BW',r:'15'}
       ]},
-      {type:'superset',label:'Superset B — No rest after B1, 90s after B2',items:[
-        {name:'KB Front Squat',pres:'5 × 8',sets:5,reps:'8',rest:'No rest',w:'',r:'8'},
-        {name:'BW Walking Lunges',pres:'5 × 15/leg',sets:5,reps:'15/leg',rest:'90 sec',w:'BW',r:'15'}
-      ]},
-      {type:'superset',label:'Superset C — 15s after C1, 90s after C2',items:[
+      {type:'superset',label:'Superset C — 15s after C1, 90s after C2',deletable:true,items:[
         {name:'Barbell Glute Bridge',pres:'4 × 10',sets:4,reps:'10',rest:'15 sec',w:'',r:'10'},
-        {name:'Alternating Duck-Unders',pres:'4 × 12/leg',sets:4,reps:'12/leg',rest:'90 sec',w:'BW',r:'12'}
+        {name:'Alternating Duck-Unders',pres:'4 × 12/leg',sets:4,reps:'12',rest:'90 sec',w:'BW',r:'12'}
       ]},
-      {type:'finisher',label:'Finisher D — Minimal rest between D1–D4, 60s after D4',items:[
+      {type:'finisher',label:'Finisher D — Minimal rest D1–D4, 60s after D4',deletable:true,items:[
         {name:'Goblet Squat',pres:'3 × 10',sets:3,reps:'10',rest:'Minimal',w:'',r:'10'},
         {name:'Plank',pres:'3 × 45 sec',sets:3,reps:'45s',rest:'Minimal',w:'BW',r:'45s'},
-        {name:'Single Leg Glute Bridge',pres:'3 × 12/leg',sets:3,reps:'12/leg',rest:'Minimal',w:'BW',r:'12'},
-        {name:'Farmers Carry',pres:'25 yards',sets:3,reps:'25 yd',rest:'60 sec after each',w:'',r:'25yd'}
+        {name:'Single Leg Glute Bridge',pres:'3 × 12/leg',sets:3,reps:'12',rest:'Minimal',w:'BW',r:'12'},
+        {name:'Farmers Carry',pres:'25 yards',sets:3,reps:'25yd',rest:'60 sec',w:'',r:'25yd'}
       ]}
     ]
   },
-  // Workout 3 - for Bench/Press days (upper body strength)
-  upper:{
-    label:'Workout 3 — Upper Body Strength',
-    desc:'Coulson Phase 1 prescribed accessories. Rest times are key — keep them.',
+  // ─── DEADLIFT DAY ───
+  // Main lift: 5/3/1 Deadlift
+  // Accessories: Coulson W1 minus the deadlift block (A1). Same as squat day accessories.
+  dead:{
+    label:'Deadlift Day — Coulson Accessories',
+    desc:'After your 5/3/1 Deadlift. The deadlift block from Coulson W1 is skipped — you already pulled heavy. Focus on hip/knee patterns here.',
     groups:[
-      {type:'superset',label:'Superset A — 30s after A1, 60–90s after A2',items:[
+      {type:'superset',label:'Superset B — No rest after B1, 90s after B2',deletable:true,items:[
+        {name:'KB Front Squat',pres:'5 × 8',sets:5,reps:'8',rest:'No rest after',w:'',r:'8'},
+        {name:'BW Walking Lunges',pres:'5 × 15/leg',sets:5,reps:'15',rest:'90 sec',w:'BW',r:'15'}
+      ]},
+      {type:'superset',label:'Superset C — 15s after C1, 90s after C2',deletable:true,items:[
+        {name:'Barbell Glute Bridge',pres:'4 × 10',sets:4,reps:'10',rest:'15 sec',w:'',r:'10'},
+        {name:'Alternating Duck-Unders',pres:'4 × 12/leg',sets:4,reps:'12',rest:'90 sec',w:'BW',r:'12'}
+      ]},
+      {type:'finisher',label:'Finisher D — Minimal rest D1–D4, 60s after D4',deletable:true,items:[
+        {name:'Goblet Squat',pres:'3 × 10',sets:3,reps:'10',rest:'Minimal',w:'',r:'10'},
+        {name:'Plank',pres:'3 × 45 sec',sets:3,reps:'45s',rest:'Minimal',w:'BW',r:'45s'},
+        {name:'Single Leg Glute Bridge',pres:'3 × 12/leg',sets:3,reps:'12',rest:'Minimal',w:'BW',r:'12'},
+        {name:'Farmers Carry',pres:'25 yards',sets:3,reps:'25yd',rest:'60 sec',w:'',r:'25yd'}
+      ]}
+    ]
+  },
+  // ─── BENCH DAY ───
+  // Main lift: 5/3/1 Bench Press
+  // Accessories: Coulson W3 in full. Incline DB Bench stays — it's accessory volume at lighter weight (BBB-style).
+  bench:{
+    label:'Bench Day — Coulson Accessories',
+    desc:'After your 5/3/1 Bench. Incline DB Bench here is lighter accessory volume — different angle, different stimulus than your main lift.',
+    groups:[
+      {type:'superset',label:'Superset A — 30s after A1, 60–90s after A2',deletable:true,items:[
         {name:'Pull-Ups / Chin-Ups (assisted if needed)',pres:'4 × 6',sets:4,reps:'6',rest:'30 sec',w:'BW',r:'6'},
         {name:'Garhammer Raise',pres:'4 × 8',sets:4,reps:'8',rest:'60–90 sec',w:'BW',r:'8'}
       ]},
-      {type:'superset',label:'Superset B — 30s after B1, 60s after B2',items:[
+      {type:'superset',label:'Superset B — 30s after B1, 60s after B2',deletable:true,items:[
         {name:'Slight Incline DB Bench Press',pres:'5 × 8',sets:5,reps:'8',rest:'30 sec',w:'',r:'8'},
-        {name:'Single Arm DB Row (knee on bench)',pres:'5 × 8/arm',sets:5,reps:'8/arm',rest:'60 sec',w:'',r:'8'}
+        {name:'Single Arm DB Row (knee on bench)',pres:'5 × 8/arm',sets:5,reps:'8',rest:'60 sec',w:'',r:'8'}
       ]},
-      {type:'superset',label:'Superset C — 45s after C1, 45s after C2',items:[
+      {type:'superset',label:'Superset C — 45s after C1, 45s after C2',deletable:true,items:[
         {name:'Overhand Grip Seated Cable Row',pres:'4 × 10',sets:4,reps:'10',rest:'45 sec',w:'',r:'10'},
         {name:'DB Seated Shoulder Press',pres:'4 × 10',sets:4,reps:'10',rest:'45 sec',w:'',r:'10'}
       ]},
-      {type:'finisher',label:'Finisher D — Minimal rest D1–D4, 60s after D4',items:[
+      {type:'finisher',label:'Finisher D — Minimal rest D1–D4, 60s after D4',deletable:true,items:[
         {name:'Push-Up',pres:'3 × 10',sets:3,reps:'10',rest:'Minimal',w:'BW',r:'10'},
-        {name:'Pallof Press',pres:'3 × 10/side',sets:3,reps:'10/side',rest:'Minimal',w:'',r:'10'},
+        {name:'Pallof Press',pres:'3 × 10/side',sets:3,reps:'10',rest:'Minimal',w:'',r:'10'},
         {name:'DB High Pull',pres:'3 × 10',sets:3,reps:'10',rest:'Minimal',w:'',r:'10'},
         {name:'Wall Slide',pres:'3 × 12',sets:3,reps:'12',rest:'60 sec',w:'BW',r:'12'}
       ]}
     ]
   },
-  // Workout 2 - MRUT circuit lower + push/pull
-  mrut2:{
-    label:'Workout 2 — MRUT',
-    desc:'Move quickly through each circuit. Minimal rest between exercises. Complete all rounds before moving to active recovery.',
+  // ─── PRESS DAY ───
+  // Main lift: 5/3/1 Standing Press
+  // Accessories: Coulson W3 minus DB Seated Shoulder Press (same pattern as main lift).
+  press:{
+    label:'Press Day — Coulson Accessories',
+    desc:'After your 5/3/1 Standing Press. DB Seated Shoulder Press removed — you already pressed overhead. Focus on pulling and horizontal push.',
     groups:[
-      {type:'circuit',label:'Circuit A — 4 Rounds → Active Recovery: Row/Bike 5 min',items:[
-        {name:'Goblet Squat',pres:'10 reps',sets:4,reps:'10',rest:'Minimal',w:'',r:'10'},
-        {name:'Push-Up',pres:'8 reps',sets:4,reps:'8',rest:'Minimal',w:'BW',r:'8'},
-        {name:'Plank',pres:'30 seconds',sets:4,reps:'30s',rest:'Minimal → then Row/Bike 5 min',w:'BW',r:'30s'}
+      {type:'superset',label:'Superset A — 30s after A1, 60–90s after A2',deletable:true,items:[
+        {name:'Pull-Ups / Chin-Ups (assisted if needed)',pres:'4 × 6',sets:4,reps:'6',rest:'30 sec',w:'BW',r:'6'},
+        {name:'Garhammer Raise',pres:'4 × 8',sets:4,reps:'8',rest:'60–90 sec',w:'BW',r:'8'}
       ]},
-      {type:'circuit',label:'Circuit B — 4 Rounds → Active Recovery: Row/Bike 3 min',items:[
-        {name:'DB Romanian Deadlift',pres:'10 reps',sets:4,reps:'10',rest:'Minimal',w:'',r:'10'},
-        {name:'Single Arm DB Bent Over Row',pres:'8 reps/side',sets:4,reps:'8/side',rest:'Minimal → then Row/Bike 3 min',w:'',r:'8'}
+      {type:'superset',label:'Superset B — 30s after B1, 60s after B2',deletable:true,items:[
+        {name:'Slight Incline DB Bench Press',pres:'5 × 8',sets:5,reps:'8',rest:'30 sec',w:'',r:'8'},
+        {name:'Single Arm DB Row (knee on bench)',pres:'5 × 8/arm',sets:5,reps:'8',rest:'60 sec',w:'',r:'8'}
       ]},
-      {type:'circuit',label:'Circuit C — 5 Rounds → Active Recovery: Treadmill 10° incline 15 min',items:[
-        {name:'Walking Lunge',pres:'8 reps/leg',sets:5,reps:'8/leg',rest:'Minimal',w:'BW',r:'8'},
-        {name:'DB Seated Alternating Shoulder Press',pres:'8 reps/arm',sets:5,reps:'8/arm',rest:'Minimal',w:'',r:'8'},
-        {name:'DB High Pull',pres:'10 reps',sets:5,reps:'10',rest:'Minimal → then Treadmill 10° 15 min',w:'',r:'10'}
+      {type:'superset',label:'Superset C — 45s after C1, 45s after C2',deletable:true,items:[
+        {name:'Overhand Grip Seated Cable Row',pres:'4 × 10',sets:4,reps:'10',rest:'45 sec',w:'',r:'10'},
+        {name:'Face Pulls',pres:'4 × 15',sets:4,reps:'15',rest:'45 sec',w:'',r:'15'}
+      ]},
+      {type:'finisher',label:'Finisher D — Minimal rest D1–D4, 60s after D4',deletable:true,items:[
+        {name:'Push-Up',pres:'3 × 10',sets:3,reps:'10',rest:'Minimal',w:'BW',r:'10'},
+        {name:'Pallof Press',pres:'3 × 10/side',sets:3,reps:'10',rest:'Minimal',w:'',r:'10'},
+        {name:'DB High Pull',pres:'3 × 10',sets:3,reps:'10',rest:'Minimal',w:'',r:'10'},
+        {name:'Wall Slide',pres:'3 × 12',sets:3,reps:'12',rest:'60 sec',w:'BW',r:'12'}
       ]}
     ]
   },
-  // Workout 4 - MRUT circuit hip/row/step
+  // ─── MRUT 2 ───
+  mrut2:{
+    label:'Workout 2 — MRUT',
+    desc:'Move quickly. Minimal rest between exercises. Complete all rounds before active recovery.',
+    groups:[
+      {type:'circuit',label:'Circuit A — 4 Rounds → Active Recovery: Row/Bike 5 min',deletable:true,items:[
+        {name:'Goblet Squat',pres:'10 reps',sets:4,reps:'10',rest:'Minimal',w:'',r:'10'},
+        {name:'Push-Up',pres:'8 reps',sets:4,reps:'8',rest:'Minimal',w:'BW',r:'8'},
+        {name:'Plank',pres:'30 sec',sets:4,reps:'30s',rest:'Minimal → Row/Bike 5 min',w:'BW',r:'30s'}
+      ]},
+      {type:'circuit',label:'Circuit B — 4 Rounds → Active Recovery: Row/Bike 3 min',deletable:true,items:[
+        {name:'DB Romanian Deadlift',pres:'10 reps',sets:4,reps:'10',rest:'Minimal',w:'',r:'10'},
+        {name:'Single Arm DB Bent Over Row',pres:'8 reps/side',sets:4,reps:'8',rest:'Minimal → Row/Bike 3 min',w:'',r:'8'}
+      ]},
+      {type:'circuit',label:'Circuit C — 5 Rounds → Active Recovery: Treadmill 10° incline 15 min',deletable:true,items:[
+        {name:'Walking Lunge',pres:'8 reps/leg',sets:5,reps:'8',rest:'Minimal',w:'BW',r:'8'},
+        {name:'DB Seated Alternating Shoulder Press',pres:'8 reps/arm',sets:5,reps:'8',rest:'Minimal',w:'',r:'8'},
+        {name:'DB High Pull',pres:'10 reps',sets:5,reps:'10',rest:'Minimal → Treadmill 10° 15 min',w:'',r:'10'}
+      ]}
+    ]
+  },
+  // ─── MRUT 4 ───
   mrut4:{
     label:'Workout 4 — MRUT',
-    desc:'Move quickly through each circuit. Minimal rest between exercises.',
+    desc:'Move quickly. Minimal rest between exercises.',
     groups:[
-      {type:'circuit',label:'Circuit A — 5 Rounds → Active Recovery: Row/Bike 5 min',items:[
-        {name:'Alternating Reverse Lunge',pres:'10 reps/leg',sets:5,reps:'10/leg',rest:'Minimal',w:'BW',r:'10'},
-        {name:'Single Arm Floor Press',pres:'8 reps/arm',sets:5,reps:'8/arm',rest:'Minimal → then Row/Bike 5 min',w:'',r:'8'}
+      {type:'circuit',label:'Circuit A — 5 Rounds → Active Recovery: Row/Bike 5 min',deletable:true,items:[
+        {name:'Alternating Reverse Lunge',pres:'10 reps/leg',sets:5,reps:'10',rest:'Minimal',w:'BW',r:'10'},
+        {name:'Single Arm Floor Press',pres:'8 reps/arm',sets:5,reps:'8',rest:'Minimal → Row/Bike 5 min',w:'',r:'8'}
       ]},
-      {type:'circuit',label:'Circuit B — 6 Rounds → Active Recovery: Row/Bike 3 min',items:[
+      {type:'circuit',label:'Circuit B — 6 Rounds → Active Recovery: Row/Bike 3 min',deletable:true,items:[
         {name:'DB Hip Thrust',pres:'15 reps',sets:6,reps:'15',rest:'Minimal',w:'',r:'15'},
         {name:'Inverted Row',pres:'8 reps',sets:6,reps:'8',rest:'Minimal',w:'BW',r:'8'},
-        {name:'Hand Walkout',pres:'8 reps',sets:6,reps:'8',rest:'Minimal → then Row/Bike 3 min',w:'BW',r:'8'}
+        {name:'Hand Walkout',pres:'8 reps',sets:6,reps:'8',rest:'Minimal → Row/Bike 3 min',w:'BW',r:'8'}
       ]},
-      {type:'circuit',label:'Circuit C — 5 Rounds → Active Recovery: Treadmill 10° incline 15 min',items:[
-        {name:'Alternating Step Up',pres:'8 reps/leg',sets:5,reps:'8/leg',rest:'Minimal',w:'BW',r:'8'},
+      {type:'circuit',label:'Circuit C — 5 Rounds → Active Recovery: Treadmill 10° incline 15 min',deletable:true,items:[
+        {name:'Alternating Step Up',pres:'8 reps/leg',sets:5,reps:'8',rest:'Minimal',w:'BW',r:'8'},
         {name:'Band Pull-Apart',pres:'8 reps',sets:5,reps:'8',rest:'Minimal',w:'Band',r:'8'},
-        {name:'Side Plank',pres:'20 sec/side',sets:5,reps:'20s/side',rest:'Minimal → then Treadmill 10° 15 min',w:'BW',r:'20s'}
+        {name:'Side Plank',pres:'20 sec/side',sets:5,reps:'20s',rest:'Minimal → Treadmill 10° 15 min',w:'BW',r:'20s'}
       ]}
     ]
   }
-};
-
-const EXERCISES={
-  Push:['Incline DB Press','Dips','Close-Grip Bench','Tricep Pushdown','Skull Crushers','DB Lateral Raise','Cable Fly','Push-Ups','DB Floor Press'],
-  Pull:['Pull-Ups','Chin-Ups','DB Row','Barbell Row','Cable Row','Face Pulls','Lat Pulldown','Bicep Curl','Hammer Curl','Rear Delt Fly'],
-  Legs:['Romanian Deadlift','Leg Press','Leg Curl','Leg Extension','Calf Raises','Lunges','Box Jump','Bulgarian Split Squat','Hip Thrust'],
-  Core:['Plank','Ab Wheel','Hanging Leg Raise','Cable Crunch','Dead Bug','Pallof Press','Hollow Body'],
-  Cond:['Jump Rope','Battle Rope','Boxing Bag','Box Step-Ups','Farmers Carry','Bike','Rowing Machine','Sled Push']
 };
 
 let currentCat='Push';
@@ -1032,7 +1231,8 @@ function load(){try{const d=localStorage.getItem('531v5');if(d){const p=JSON.par
 
 function init(){
   load();
-  renderTMs();loadTMInputs();renderPrescrip();renderLog();
+  renderTMs();loadTMInputs();renderLog();
+  renderScheduleUI();
   document.getElementById('sn-input').value=S.shortcutName;
   document.getElementById('disp-sn').textContent=S.shortcutName;
 }
@@ -1044,6 +1244,8 @@ function showSc(name,btn){
   document.getElementById('sc-'+name).classList.add('active');
   btn.classList.add('active');
   if(name==='log')renderLog();
+  if(name==='workout')renderScheduleUI();
+  if(name==='settings'){loadSettingsUI();loadScheduleSettings();}
 }
 
 // ============ CALC ============
@@ -1100,7 +1302,7 @@ function setMRUT(num,el){
 }
 
 // ============ PRESCRIPTIONS ============
-function setWeek(w,el){S.week=w;document.querySelectorAll('.wt').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderPrescrip();}
+function setWeek(w,el){S.week=w;document.querySelectorAll('.wt').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderScheduleUI();}
 function setLift(l,el){S.lift=l;document.querySelectorAll('.lc').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderPrescrip();}
 function renderPrescrip(){
   const tm=S.tms[S.lift];
@@ -1113,23 +1315,149 @@ function renderPrescrip(){
     const rep=s.amrap?`<span class="sr">${s.r}</span> <span class="amtag">AMRAP</span>`:`<span class="sr">${s.r}</span>`;
     return `<tr><td class="sp2">Set ${i+1}</td><td class="sp2">${Math.round(s.p*100)}%</td><td class="sw">${wt}</td><td>${rep}</td></tr>`;
   }).join('');
+  const multi=document.getElementById('multi-lift-preview');
+  if(multi)multi.style.display='none';
 }
 
-// ============ SESSION START ============
+// ============ SCHEDULE UI ============
+function renderScheduleUI(){
+  const sched=SCHEDULES[S.schedule];
+  const isCustom=S.schedule==='custom';
+  // Show/hide sections
+  document.getElementById('sched-day-section').style.display=isCustom?'none':'block';
+  document.getElementById('manual-lift-section').style.display=isCustom?'block':'none';
+  if(isCustom){renderPrescrip();return;}
+  // Badge name
+  const badge=document.getElementById('sched-name-badge');
+  if(badge)badge.textContent=sched.name;
+  // Build day picker
+  const row=document.getElementById('day-pick-row');
+  if(!row)return;
+  row.innerHTML=sched.days.map((d,i)=>{
+    const isActive=i===S.scheduleDay;
+    const liftBadges=d.lifts.map(l=>`<span class="lbadge">${LL[l]}</span>`).join('');
+    return `<div class="dp-btn ${isActive?'active':''}" onclick="setScheduleDay(${i})">
+      <div class="dp-name">${d.label}</div>
+      <div class="dp-lifts">${liftBadges}</div>
+    </div>`;
+  }).join('');
+  // Note
+  updateSchedDayNote();
+  // Sync lift + prescription preview
+  syncLiftFromSchedule();
+}
+function setScheduleDay(i){
+  S.scheduleDay=i;save();
+  renderScheduleUI();
+}
+function syncLiftFromSchedule(){
+  const sched=SCHEDULES[S.schedule];
+  if(!sched||!sched.days)return;
+  const day=sched.days[S.scheduleDay];
+  if(!day)return;
+  // Set primary lift to first in queue
+  S.lift=day.lifts[0];
+  // Update lift chips visual
+  document.querySelectorAll('.lc').forEach(c=>c.classList.remove('active'));
+  // Rebuild prescription preview
+  renderSchedulePrescrip(day);
+}
+function renderSchedulePrescrip(day){
+  const isMulti=day.lifts.length>1;
+  const multi=document.getElementById('multi-lift-preview');
+  const tm=S.tms[day.lifts[0]];
+  const scheme=SCHEMES[S.week];
+  const wl=S.week===4?'DELOAD':'WEEK '+S.week;
+  // Primary lift table
+  document.getElementById('ph0-title').innerHTML=`${LL[day.lifts[0]]} — ${wl} <span class="cbadge">CYCLE ${S.cycle}</span>${isMulti?`<span class="ml-badge">MULTI-LIFT DAY</span>`:''}`;
+  document.getElementById('ph0-tm').textContent=tm+' lbs';
+  document.getElementById('prescrip-body').innerHTML=scheme.map((s,i)=>{
+    const wt=r5(tm*s.p);
+    const rep=s.amrap?`<span class="sr">${s.r}</span> <span class="amtag">AMRAP</span>`:`<span class="sr">${s.r}</span>`;
+    return `<tr><td class="sp2">Set ${i+1}</td><td class="sp2">${Math.round(s.p*100)}%</td><td class="sw">${wt}</td><td>${rep}</td></tr>`;
+  }).join('');
+  // Second lift preview
+  if(multi&&multi){
+    const lift2=day.lifts[1];
+    const tm2=S.tms[lift2];
+    multi.style.display='block';
+    multi.innerHTML=`<div class="div"></div>
+      <div style="font-size:11px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Then: ${LL[lift2]} <span style="color:var(--slate)">TM ${tm2} lbs</span></div>
+      <table class="stbl"><thead><tr><th>SET</th><th>%TM</th><th>WEIGHT</th><th>REPS</th></tr></thead><tbody>${
+        scheme.map((s,i)=>{const wt=r5(tm2*s.p);const rep=s.amrap?`<span class="sr">${s.r}</span> <span class="amtag">AMRAP</span>`:`<span class="sr">${s.r}</span>`;return `<tr><td class="sp2">Set ${i+1}</td><td class="sp2">${Math.round(s.p*100)}%</td><td class="sw">${wt}</td><td>${rep}</td></tr>`;}).join('')
+      }</tbody></table>`;
+  } else if(multi){
+    multi.style.display='none';
+  }
+}
+function updateSchedDayNote(){
+  const sched=SCHEDULES[S.schedule];
+  if(!sched||!sched.days)return;
+  const day=sched.days[S.scheduleDay];
+  const note=document.getElementById('sched-day-note');
+  if(!note)return;
+  const liftNames=day.lifts.map(l=>LL[l]).join(' → ');
+  const isMulti=day.lifts.length>1;
+  note.innerHTML=`<strong style="color:white;">${day.subtitle}</strong>${isMulti?` <span class="ml-badge">2 lifts back-to-back</span>`:''}<br>${sched.source}`;
+}
+
+// ============ SCHEDULE SETTINGS ============
+function setSchedule(key,el){
+  S.schedule=key;
+  S.scheduleDay=0;
+  save();
+  // Update button states
+  document.querySelectorAll('.sched-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  // Detail box
+  const sched=SCHEDULES[key];
+  const det=document.getElementById('sched-detail-box');
+  if(det&&sched){
+    const dayRows=sched.days?sched.days.map((d,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+      <span style="font-family:'Oswald',sans-serif;color:var(--gold);width:80px;font-size:12px;">${d.label}</span>
+      <span style="color:white;font-size:12px;">${d.subtitle}</span>
+      ${d.lifts.length>1?`<span class="ml-badge" style="margin-left:auto">PAIRED</span>`:''}
+    </div>`).join(''):'';
+    det.innerHTML=`<p style="color:var(--gold);font-weight:700;font-size:12px;margin-bottom:8px;">${sched.name} — ${sched.source}</p>
+      <p style="margin-bottom:10px;">${sched.desc}</p>${dayRows}`;
+  }
+  renderScheduleUI();
+  toast(`Schedule set: ${sched.name} ✓`);
+}
+function loadScheduleSettings(){
+  document.querySelectorAll('.sched-btn').forEach(b=>b.classList.remove('active'));
+  const active=document.getElementById('sb-'+S.schedule);
+  if(active){active.classList.add('active');setSchedule(S.schedule,active);}
+}
 function startSession(){
   coulsonSetData={};
   if(S.sessType==='mrut'){
     S.session={type:'mrut',mrutNum:S.mrutNum,extras:[],startTime:Date.now()};
     showPhase('1');
   } else {
+    // Determine lift queue from schedule
+    const sched=SCHEDULES[S.schedule];
+    let liftQueue=[S.lift];
+    let coulsonKey=S.lift;
+    if(sched&&sched.days&&S.schedule!=='custom'){
+      const day=sched.days[S.scheduleDay]||sched.days[0];
+      if(day){liftQueue=[...day.lifts];coulsonKey=day.coulson;}
+    }
+    const primaryLift=liftQueue[0];
     S.session={
-      type:'strength',lift:S.lift,week:S.week,cycle:S.cycle,
-      liftLabel:LL[S.lift],weekLabel:S.week===4?'Deload Week':`Week ${S.week}`,
-      tm:S.tms[S.lift],scheme:SCHEMES[S.week],currentSetIdx:0,
-      mainSets:[],extras:[],startTime:Date.now()
+      type:'strength',
+      lift:primaryLift,liftLabel:LL[primaryLift],
+      liftQueue,liftQueueIdx:0,
+      completedLifts:[],
+      coulsonKey,
+      week:S.week,cycle:S.cycle,
+      weekLabel:S.week===4?'Deload Week':`Week ${S.week}`,
+      tm:S.tms[primaryLift],scheme:SCHEMES[S.week],
+      currentSetIdx:0,mainSets:[],extras:[],startTime:Date.now()
     };
     showPhase('1');
   }
+  startSessionClock();
   renderWarmupChecklist();
 }
 function showPhase(n){
@@ -1175,7 +1503,14 @@ function renderMainLiftUI(){
     const cls=i<sess.currentSetIdx?'done':i===sess.currentSetIdx?'cur':'';
     return `<div class="dot ${cls}"></div>`;
   }).join('');
-  document.getElementById('ph2-title').innerHTML=`${sess.liftLabel} — ${sess.weekLabel} <span class="cbadge">CYCLE ${sess.cycle}</span>`;
+  // Lift queue bar for multi-lift days
+  const lq=sess.liftQueue||[sess.lift];
+  const lqIdx=sess.liftQueueIdx||0;
+  const lqBar=lq.length>1?`<div class="lq-bar">${lq.map((lk,i)=>{
+    const cls=i<lqIdx?'done':i===lqIdx?'cur':'next';
+    return `<div class="lq-step"><div class="lq-dot ${cls}">${i<lqIdx?'✓':(i+1)}</div><span class="lq-label ${cls==='cur'?'cur':''}">${LL[lk]}</span></div>${i<lq.length-1?'<span class="lq-arrow">→</span>':''}`;
+  }).join('')}</div>`:'';
+  document.getElementById('ph2-title').innerHTML=`${lqBar}${sess.liftLabel} — ${sess.weekLabel} <span class="cbadge">CYCLE ${sess.cycle}</span>`;
   if(sess.currentSetIdx>=n){
     document.getElementById('set-logger').style.display='none';
     document.getElementById('done-main-btn').style.display='block';
@@ -1193,6 +1528,11 @@ function renderMainLiftUI(){
   document.getElementById('rpe-slider').value=6;
   updateRPE(6);
   document.getElementById('e1rm-live').style.display='none';
+  document.getElementById('rest-timer').style.display='none';
+  document.getElementById('set-logger').style.display='block';
+  // AMRAP coaching
+  if(s.amrap){showAmrapCoach(sess.week,sess.mainSets.length?sess.mainSets[sess.mainSets.length-1].reps:5);}
+  else{const b=document.getElementById('amrap-coach');if(b)b.style.display='none';}
   ['inp-w','inp-r'].forEach(id=>{
     document.getElementById(id).oninput=()=>{
       const w=parseFloat(document.getElementById('inp-w').value);
@@ -1222,31 +1562,94 @@ function logSet(){
   const e1rm=reps===1?w:r5(w*(1+reps/30));
   sess.mainSets.push({weight:w,reps,rpe,rest,e1rm,prescribed_w:r5(sess.tm*s.p),prescribed_r:s.r,pct:Math.round(s.p*100),amrap:s.amrap||false});
   sess.currentSetIdx++;
-  renderMainLiftUI();
-  if(sess.currentSetIdx<sess.scheme.length)toast(`Set ${sess.currentSetIdx} logged ✓`);
+  const isLastSet=sess.currentSetIdx>=sess.scheme.length;
+  renderLoggedSets();
+  if(sess.currentSetIdx<sess.scheme.length){
+    toast(`Set ${sess.currentSetIdx} logged ✓`);
+    // Show rest timer (hide set logger temporarily)
+    document.getElementById('set-logger').style.display='none';
+    startRestTimer(rest);
+  } else {
+    // All sets done — show rest then reveal done button
+    document.getElementById('set-logger').style.display='none';
+    startRestTimer(rest);
+    // done-main-btn shown after rest via onRestComplete → renderMainLiftUI
+  }
 }
 function renderLoggedSets(){
   const sess=S.session;
   const wrap=document.getElementById('logged-sets-wrap');
   if(!sess.mainSets.length){wrap.innerHTML='';return;}
+  // Find personal best e1RM from log history for this lift
+  const liftName=sess.liftLabel;
+  const histBest=S.log.filter(e=>e.lift===liftName&&e.bestE1rm).reduce((b,e)=>Math.max(b,e.bestE1rm),0);
+  const sessionBest=sess.mainSets.reduce((b,s)=>Math.max(b,s.e1rm),0);
   wrap.innerHTML=`<div style="font-size:10px;color:var(--slate);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">Logged Sets</div>`+
   sess.mainSets.map((s,i)=>{
     const rc=s.rpe<=4?'var(--green)':s.rpe<=7?'var(--orange)':'var(--red)';
     const diff=s.weight!==s.prescribed_w?` <span style="color:${s.weight>s.prescribed_w?'var(--green)':'#f87171'};font-size:10px;">(${s.weight>s.prescribed_w?'+':''}${s.weight-s.prescribed_w})</span>`:'';
-    return `<div class="ls"><span class="ls-n">${i+1}</span><span class="ls-d"><strong style="color:var(--green)">${s.weight}lbs</strong>${diff} × <strong style="color:var(--orange)">${s.reps}</strong></span><span class="ls-e">e1RM ${s.e1rm}</span><span class="ls-r" style="background:${rc}22;color:${rc};border:1px solid ${rc}44;">RPE ${s.rpe}</span></div>`;
+    const isPR=s.e1rm>0&&s.e1rm>=sessionBest&&s.e1rm>histBest;
+    const prBadge=isPR?`<span class="pr-badge">🏆 PR</span>`:'';
+    return `<div class="ls"><span class="ls-n">${i+1}</span><span class="ls-d"><strong style="color:var(--green)">${s.weight}lbs</strong>${diff} × <strong style="color:var(--orange)">${s.reps}</strong>${prBadge}</span><span class="ls-e">e1RM ${s.e1rm}</span><span class="ls-r" style="background:${rc}22;color:${rc};border:1px solid ${rc}44;">RPE ${s.rpe}</span></div>`;
   }).join('');
 }
-function doneMainLift(){showPhase('3');renderCoulsonPrescribed();}
+function doneMainLift(){
+  const sess=S.session;
+  // Save completed lift data
+  sess.completedLifts.push({lift:sess.lift,liftLabel:sess.liftLabel,tm:sess.tm,mainSets:[...sess.mainSets]});
+  // Check if more lifts in queue
+  if(sess.liftQueueIdx<sess.liftQueue.length-1){
+    showLiftTransition();
+  } else {
+    showPhase('3');renderCoulsonPrescribed();
+  }
+}
+function showLiftTransition(){
+  const sess=S.session;
+  const done=sess.completedLifts[sess.completedLifts.length-1];
+  const nextLiftKey=sess.liftQueue[sess.liftQueueIdx+1];
+  const mainSets=done.mainSets;
+  const bestE1rm=mainSets.length?Math.max(...mainSets.map(s=>s.e1rm)):null;
+  const totalVol=mainSets.reduce((t,s)=>t+s.weight*s.reps,0);
+  document.getElementById('lt-done-label').textContent=`${done.liftLabel.toUpperCase()} COMPLETE`;
+  document.getElementById('lt-stats').innerHTML=
+    (bestE1rm?`e1RM: <strong style="color:#93c5fd">${bestE1rm} lbs</strong>&nbsp;&nbsp;`:'') +
+    (totalVol?`Volume: <strong style="color:var(--green)">${totalVol.toLocaleString()} lbs</strong>`:'') +
+    `<br><span style="font-size:11px">Sets logged: ${mainSets.length}</span>`;
+  document.getElementById('lt-next-name').textContent=LL[nextLiftKey];
+  showPhase('2b');
+}
+function advanceLiftQueue(){
+  const sess=S.session;
+  sess.liftQueueIdx++;
+  const nextLiftKey=sess.liftQueue[sess.liftQueueIdx];
+  // Reset for next lift
+  sess.lift=nextLiftKey;
+  sess.liftLabel=LL[nextLiftKey];
+  sess.tm=S.tms[nextLiftKey];
+  sess.currentSetIdx=0;
+  sess.mainSets=[];
+  coulsonSetData={};
+  showPhase('2');
+  renderMainLiftUI();
+}
+function skipToAccessories(){
+  const sess=S.session;
+  // Save current lift if any sets logged
+  if(sess.mainSets.length){
+    sess.completedLifts.push({lift:sess.lift,liftLabel:sess.liftLabel,tm:sess.tm,mainSets:[...sess.mainSets]});
+  }
+  showPhase('3');renderCoulsonPrescribed();
+}
 function goBackToMain(){showPhase('2');renderMainLiftUI();}
-function cancelSession(){S.session=null;showPhase('0');}
+function cancelSession(){S.session=null;showPhase('0');stopSessionClock();if(_restTimer){clearInterval(_restTimer);_restTimer=null;}document.getElementById('rest-timer').style.display='none';}
 
 // ============ COULSON PRESCRIBED RENDERING ============
 function getCoulsonPlan(){
-  if(S.session.type==='strength'){
-    const isLower=(S.session.lift==='squat'||S.session.lift==='dead');
-    return isLower?COULSON.lower:COULSON.upper;
-  }
-  return S.session.mrutNum===2?COULSON.mrut2:COULSON.mrut4;
+  if(S.session.type==='mrut')return S.session.mrutNum===2?COULSON.mrut2:COULSON.mrut4;
+  // Use coulsonKey (set from schedule day) — defaults to primary lift
+  const key=S.session.coulsonKey||S.session.lift;
+  return COULSON[key]||COULSON.squat;
 }
 function ensureSetData(gi,ii,defaultSets,defaultReps,defaultW){
   const key=`${gi}-${ii}`;
@@ -1260,8 +1663,10 @@ function labelClass(type){return type==='superset'?'sup':type==='circuit'?'cir':
 
 function renderCoulsonPrescribed(){
   const plan=getCoulsonPlan();
+  if(!S.session.deletedGroups)S.session.deletedGroups=[];
   document.getElementById('coulson-header').innerHTML=`<div class="ch-title">${plan.label}</div><div class="ch-sub">${plan.desc}</div>`;
   document.getElementById('coulson-prescribed').innerHTML=plan.groups.map((g,gi)=>{
+    if(S.session.deletedGroups.includes(gi))return'';
     const itemsHTML=g.items.map((item,ii)=>{
       const sets=ensureSetData(gi,ii,item.sets,item.reps,item.w);
       const setsHTML=sets.map((set,si)=>`
@@ -1283,12 +1688,22 @@ function renderCoulsonPrescribed(){
         </div>
       </div>`;
     }).join('');
+    const delBtn=g.deletable?`<button class="btn xs red" onclick="deleteCoulsonGroup(${gi})" style="margin-left:auto;">REMOVE</button>`:'';
     return `<div class="ex-group ${groupClass(g.type)}">
-      <div class="eg-label ${labelClass(g.type)}">${g.label}</div>
+      <div style="display:flex;align-items:center;margin-bottom:8px;">
+        <div class="eg-label ${labelClass(g.type)}" style="margin-bottom:0;flex:1;">${g.label}</div>
+        ${delBtn}
+      </div>
       ${itemsHTML}
     </div>`;
   }).join('');
   renderExtras();
+}
+function deleteCoulsonGroup(gi){
+  if(!S.session.deletedGroups)S.session.deletedGroups=[];
+  S.session.deletedGroups.push(gi);
+  renderCoulsonPrescribed();
+  toast('Group removed for this session');
 }
 function updateCoulsonSet(gi,ii,si,field,val){
   const key=`${gi}-${ii}`;
@@ -1367,6 +1782,7 @@ function finishMRUT(){
     duration:dur,notes,estCals:'300–400',healthSynced:false,stravaSynced:false
   };
   S.log.unshift(entry);S.session=null;save();
+  stopSessionClock();
   buildSyncModal(entry);
   document.getElementById('sync-modal').classList.add('open');
   showPhase('0');
@@ -1485,29 +1901,49 @@ function finishSession(){
   const sess=S.session;
   const dur=parseInt(document.getElementById('sess-dur').value)||60;
   const notes=document.getElementById('sess-notes').value.trim();
-  const mainVol=sess.mainSets.reduce((t,s)=>t+s.weight*s.reps,0);
+
+  // Aggregate all lifts (completedLifts queue + current if not yet saved)
+  const allLifts=[...sess.completedLifts];
+  if(sess.mainSets.length&&!allLifts.find(l=>l.lift===sess.lift&&l.mainSets===sess.mainSets)){
+    allLifts.push({lift:sess.lift,liftLabel:sess.liftLabel,tm:sess.tm,mainSets:sess.mainSets});
+  }
+  const allMainSets=allLifts.flatMap(l=>l.mainSets);
+
+  const mainVol=allMainSets.reduce((t,s)=>t+s.weight*s.reps,0);
   const coulsonVol=calcTotalCoulsonVol();
   const extrasVol=calcExtrasVol(sess.extras);
   const totalVol=mainVol+coulsonVol+extrasVol;
-  const bestE1rm=sess.mainSets.length?Math.max(...sess.mainSets.map(s=>s.e1rm)):null;
-  const avgRpe=sess.mainSets.length?Math.round(sess.mainSets.reduce((t,s)=>t+s.rpe,0)/sess.mainSets.length*10)/10:null;
-  const topSet=sess.mainSets.length?sess.mainSets.reduce((b,s)=>s.weight*s.reps>b.weight*b.reps?s:b):null;
+  const bestE1rm=allMainSets.length?Math.max(...allMainSets.map(s=>s.e1rm)):null;
+  const avgRpe=allMainSets.length?Math.round(allMainSets.reduce((t,s)=>t+s.rpe,0)/allMainSets.length*10)/10:null;
+  const topSet=allMainSets.length?allMainSets.reduce((b,s)=>s.weight*s.reps>b.weight*b.reps?s:b):null;
+
   const plan=getCoulsonPlan();
   const coulsonSets=buildCoulsonSetsLog(plan);
+
+  // Display label — show all lifts for multi-lift days
+  const liftDisplay=allLifts.length>1?allLifts.map(l=>l.liftLabel).join(' + '):sess.liftLabel;
+
   const entry={
     id:Date.now(),
     date:new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}),
     time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
-    type:'strength',lift:sess.liftLabel,liftDisplay:sess.liftLabel,
+    type:'strength',
+    lift:allLifts.length>1?liftDisplay:sess.liftLabel,
+    liftDisplay,
     week:sess.weekLabel,weekLabel:sess.weekLabel,cycle:sess.cycle,tm:sess.tm,
-    mainSets:sess.mainSets,coulsonSets,assistance:sess.extras,
+    mainSets:allMainSets,
+    liftBreakdown:allLifts.length>1?allLifts:null,  // per-lift detail for multi days
+    coulsonSets,assistance:sess.extras,
+    schedule:S.schedule,
     totalVolume:totalVol,bestE1rm,avgRpe,topSet,
-    duration:dur,notes,estCals:LCALS[sess.lift],healthSynced:false,stravaSynced:false
+    duration:dur,notes,estCals:LCALS[sess.lift]||'300–400',
+    healthSynced:false,stravaSynced:false
   };
   S.log.unshift(entry);S.session=null;
   document.getElementById('sess-notes').value='';
   document.getElementById('sess-dur').value='60';
   save();
+  stopSessionClock();
   buildSyncModal(entry);
   document.getElementById('sync-modal').classList.add('open');
   showPhase('0');
@@ -1579,7 +2015,19 @@ function renderLog(){
         <div class="ssi"><div class="ssi-l">Time</div><div class="ssi-v" style="font-size:14px;">${e.duration||60}</div><div style="font-size:9px;color:var(--slate)">min</div></div>
       </div>
       <div class="le-det" id="det-${e.id}">
-        ${e.mainSets&&e.mainSets.length?`
+        ${e.liftBreakdown&&e.liftBreakdown.length>1?
+          // Multi-lift day: show each lift separately
+          e.liftBreakdown.map(lb=>`
+          <div class="ex-sec">
+            <div class="ex-sec-t">🏋️ ${lb.liftLabel} — TM ${lb.tm} lbs</div>
+            ${lb.mainSets.map((s,i)=>{
+              const rc=s.rpe<=4?'var(--green)':s.rpe<=7?'var(--orange)':'var(--red)';
+              return `<div class="sdr"><span class="sdr-n">${i+1}</span><span class="sdr-w">${s.weight}lbs</span><span style="color:var(--slate);font-size:11px;"> × </span><span class="sdr-r">${s.reps}</span><span style="font-size:10px;padding:1px 6px;border-radius:8px;background:${rc}22;color:${rc};margin-left:4px;">RPE ${s.rpe}</span><span class="sdr-e">e1RM ${s.e1rm}</span></div>`;
+            }).join('')}
+          </div>`).join('')
+          :
+          // Single lift
+          e.mainSets&&e.mainSets.length?`
           <div class="ex-sec">
             <div class="ex-sec-t">Main Lift — ${e.lift}</div>
             ${e.mainSets.map((s,i)=>{
@@ -1619,20 +2067,60 @@ function renderTrend(){
   const entries=S.log.filter(e=>e.lift===lift&&e.bestE1rm);
   const tc=document.getElementById('trend-content');
   if(!tc)return;
-  if(!entries.length){tc.innerHTML=`<p style="font-size:12px;color:var(--slate);text-align:center;padding:10px 0;">No ${lift} sessions logged yet.</p>`;return;}
-  const maxE=Math.max(...entries.map(e=>e.bestE1rm));
-  tc.innerHTML=`<div style="font-size:11px;color:var(--slate);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">e1RM Trend (last ${Math.min(entries.length,8)} sessions)</div>`+
-  entries.slice(0,8).reverse().map(e=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px;">
-      <span style="color:var(--slate)">${e.date.split(',')[0]}</span>
-      <div style="text-align:right;"><span style="font-family:'Oswald',sans-serif;font-size:15px;color:#93c5fd;">${e.bestE1rm} lbs</span><span style="color:var(--slate);font-size:10px;margin-left:6px;">${e.weekLabel||e.week}</span></div>
+  if(entries.length<2){
+    tc.innerHTML=`<p style="font-size:12px;color:var(--slate);text-align:center;padding:16px 0;">Log ${entries.length===0?'2':'1'} more ${lift} session${entries.length===0?'s':''} to see the trend chart.</p>`;
+    return;
+  }
+  const pts=entries.slice(0,12).reverse();
+  const vals=pts.map(e=>e.bestE1rm);
+  const minV=Math.min(...vals)-10;
+  const maxV=Math.max(...vals)+10;
+  const W=320,H=120,padL=36,padR=8,padT=10,padB=28;
+  const cW=W-padL-padR,cH=H-padT-padB;
+  const xScale=(i)=>padL+i*(cW/(pts.length-1));
+  const yScale=(v)=>padT+cH-(cH*(v-minV)/(maxV-minV));
+  // Grid lines
+  const gridVals=[minV,Math.round((minV+maxV)/2),maxV].map(v=>Math.round(v/5)*5);
+  const gridLines=gridVals.map(v=>{
+    const y=yScale(v);
+    return `<line class="tc-grid" x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}"/>
+            <text class="tc-ylabel" x="${padL-4}" y="${y+3}">${v}</text>`;
+  }).join('');
+  // Area path
+  const linePts=pts.map((e,i)=>`${i===0?'M':'L'}${xScale(i)},${yScale(e.bestE1rm)}`).join(' ');
+  const areaPath=`${linePts} L${xScale(pts.length-1)},${H-padB} L${padL},${H-padB} Z`;
+  // Dots and labels
+  const dotsSVG=pts.map((e,i)=>{
+    const x=xScale(i),y=yScale(e.bestE1rm);
+    const lbl=e.date.split(',')[0];
+    const isMax=e.bestE1rm===Math.max(...vals);
+    return `<circle class="tc-dot" cx="${x}" cy="${y}" r="${isMax?5:3.5}" fill="${isMax?'var(--gold)':'#93c5fd'}" stroke="#0a3d1f" stroke-width="1.5"/>
+            ${isMax?`<text class="tc-val" x="${x}" y="${y-8}">${e.bestE1rm}</text>`:''}
+            <text class="tc-label" x="${x}" y="${H-padB+14}">${lbl.replace(' ','&#10;')}</text>`;
+  }).join('');
+  const best=Math.max(...vals);
+  const latest=vals[vals.length-1];
+  const delta=latest-(vals[0]||latest);
+  tc.innerHTML=`
+    <div class="trend-chart-wrap">
+      <svg class="trend-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="tcGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#93c5fd" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        ${gridLines}
+        <path class="tc-area" d="${areaPath}"/>
+        <path class="tc-line" d="${linePts}"/>
+        ${dotsSVG}
+      </svg>
     </div>
-    <div class="vbar-w"><div class="vbar" style="width:${Math.round(e.bestE1rm/maxE*100)}%"></div></div>
-  `).join('')+
-  `<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;">
-    <span style="color:var(--slate);">Best: <strong style="color:#93c5fd">${maxE} lbs</strong></span>
-    <span style="color:var(--slate);">${entries.length} sessions</span>
-  </div>`;
+    <div style="display:flex;justify-content:space-between;font-size:12px;padding:0 4px;">
+      <span style="color:var(--slate)">Best: <strong style="color:var(--gold)">${best} lbs</strong></span>
+      <span style="color:var(--slate)">Latest: <strong style="color:#93c5fd">${latest} lbs</strong></span>
+      <span style="color:${delta>=0?'var(--green)':'var(--red)'}">${delta>=0?'▲':'▼'} ${Math.abs(delta)} lbs</span>
+    </div>`;
 }
 function delLog(id){S.log=S.log.filter(e=>e.id!==id);save();renderLog();}
 function clearLog(){if(confirm('Clear all history?')){S.log=[];save();renderLog();}}
@@ -1649,7 +2137,6 @@ function toggleAcc(id){
 
 // ============ SETTINGS UI ============
 function loadSettingsUI(){
-  // Sync TM inputs to settings panel
   const ids={squat:'s-tms',bench:'s-tmb',dead:'s-tmd',press:'s-tmp'};
   Object.entries(ids).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.value=S.tms[k];});
   const cyc=document.getElementById('s-cyc');if(cyc)cyc.value=S.cycle;
@@ -1658,6 +2145,7 @@ function loadSettingsUI(){
   const dSN=document.getElementById('disp-sn');if(dSN)dSN.textContent=S.shortcutName;
   const dRSN=document.getElementById('disp-reader-sn');if(dRSN)dRSN.textContent=S.readerShortcutName||'5/3/1 Health Reader';
   renderSettingsTMDisplay();
+  loadScheduleSettings();
 }
 function renderSettingsTMDisplay(){
   const el=document.getElementById('s-tm-disp');if(!el)return;
@@ -1675,17 +2163,6 @@ function advanceCycleSettings(){
   S.tms.squat+=10;S.tms.dead+=10;S.tms.bench+=5;S.tms.press+=5;S.cycle+=1;
   loadTMInputs();loadSettingsUI();save();renderTMs();renderPrescrip();
   toast(`Cycle ${S.cycle} — TMs updated ✓`);
-}
-function saveReaderSN(){
-  const n=document.getElementById('reader-sn-input')?.value.trim();
-  if(!n)return;
-  S.readerShortcutName=n;
-  const el=document.getElementById('disp-reader-sn');if(el)el.textContent=n;
-  save();toast('Health Reader name saved ✓');
-}
-function testReaderSC(){
-  const name=S.readerShortcutName||'5/3/1 Health Reader';
-  window.location.href=`shortcuts://run-shortcut?name=${encodeURIComponent(name)}`;
 }
 function resetAll(){
   if(confirm('Reset ALL app data? This cannot be undone.')){
@@ -1883,94 +2360,110 @@ function renderMetricHistory(){
   }).join('');
 }
 
-function runHealthShortcut(){
-  const name=S.readerShortcutName||'5/3/1 Health Reader';
-  // Show paste button after returning from shortcut
-  document.getElementById('paste-btn').style.display='block';
-  document.getElementById('fetch-status').innerHTML=
-    '✅ Shortcut launched — when it finishes and returns here,<br>tap <strong style="color:var(--green)">PASTE HEALTH DATA</strong> below.';
-  window.location.href=`shortcuts://run-shortcut?name=${encodeURIComponent(name)}`;
+
+// ============ SESSION CLOCK ============
+let _clockInterval=null;
+function startSessionClock(){
+  const el=document.getElementById('sess-clock');
+  const timeEl=document.getElementById('sess-clock-time');
+  if(!el||!timeEl)return;
+  el.classList.add('active');
+  if(_clockInterval)clearInterval(_clockInterval);
+  _clockInterval=setInterval(()=>{
+    if(!S.session){stopSessionClock();return;}
+    const elapsed=Math.floor((Date.now()-(S.session.startTime||Date.now()))/1000);
+    const m=Math.floor(elapsed/60),s=elapsed%60;
+    timeEl.textContent=`${m}:${String(s).padStart(2,'0')}`;
+  },1000);
+}
+function stopSessionClock(){
+  const el=document.getElementById('sess-clock');
+  if(el)el.classList.remove('active');
+  if(_clockInterval){clearInterval(_clockInterval);_clockInterval=null;}
 }
 
-async function pasteFromClipboard(){
-  try {
-    const text=await navigator.clipboard.readText();
-    let data;
-    try{data=JSON.parse(text);}catch(e){
-      // Try to extract numbers if not valid JSON
-      toast('Clipboard not in expected format — enter manually');
-      return;
+// ============ REST TIMER ============
+let _restTimer=null;
+let _restTotal=0;
+let _restRemaining=0;
+const RT_CIRCUMFERENCE=220;
+
+function startRestTimer(mins){
+  const secs=Math.round((mins||3)*60);
+  _restTotal=secs;
+  _restRemaining=secs;
+  document.getElementById('rest-timer').style.display='block';
+  document.getElementById('done-main-btn').style.display='none';
+  updateRestDisplay();
+  if(_restTimer)clearInterval(_restTimer);
+  _restTimer=setInterval(()=>{
+    _restRemaining--;
+    updateRestDisplay();
+    if(_restRemaining<=0){
+      clearInterval(_restTimer);_restTimer=null;
+      onRestComplete();
     }
-    if(!data.hrv&&!data.rhr&&!data.sleep){
-      toast('No Health data found in clipboard');return;
-    }
-    // Fill inputs
-    if(data.hrv){const el=document.getElementById('met-hrv');if(el)el.value=Math.round(data.hrv);}
-    if(data.rhr){const el=document.getElementById('met-rhr');if(el)el.value=Math.round(data.rhr);}
-    if(data.sleep){const el=document.getElementById('met-sleep');if(el)el.value=Math.round(data.sleep*10)/10;}
+  },1000);
+}
 
-    // Show what was parsed
-    const pr=document.getElementById('paste-result');
-    pr.style.display='block';
-    pr.innerHTML=`✅ Loaded from Apple Health${data.source?' ('+data.source+')':''}<br>
-      ${data.hrv?`HRV: <strong>${Math.round(data.hrv)} ms</strong>&nbsp;&nbsp;`:''}
-      ${data.rhr?`RHR: <strong>${Math.round(data.rhr)} bpm</strong>&nbsp;&nbsp;`:''}
-      ${data.sleep?`Sleep: <strong>${Math.round(data.sleep*10)/10} hrs</strong>`:''}`;
-
-    saveMetrics();
-    calcReadiness();
-    toast('Health data loaded & scored ✓');
-
-    // Hide paste button after use
-    document.getElementById('paste-btn').style.display='none';
-    document.getElementById('fetch-status').innerHTML=
-      'Data loaded from Apple Health. Re-run shortcut tomorrow morning for a fresh score.';
-  } catch(e){
-    // Clipboard permission denied — show manual instructions
-    document.getElementById('paste-result').style.display='block';
-    document.getElementById('paste-result').style.borderColor='rgba(251,146,60,0.4)';
-    document.getElementById('paste-result').style.color='var(--orange)';
-    document.getElementById('paste-result').innerHTML=
-      '⚠️ Clipboard access blocked by browser.<br>Allow clipboard access in Safari Settings, or enter values manually below.';
+function updateRestDisplay(){
+  const m=Math.floor(_restRemaining/60),s=_restRemaining%60;
+  document.getElementById('rt-num').textContent=_restRemaining>0?`${m}:${String(s).padStart(2,'0')}`:'GO!';
+  const fill=document.getElementById('rt-fill');
+  const msg=document.getElementById('rt-msg');
+  const progress=_restRemaining/_restTotal;
+  const offset=RT_CIRCUMFERENCE*(1-progress);
+  fill.style.strokeDashoffset=offset;
+  if(_restRemaining<=10&&_restRemaining>0){
+    fill.style.stroke='var(--orange)';
+    msg.textContent='ALMOST...';
+    msg.className='rt-msg';
+  } else if(_restRemaining<=0){
+    fill.style.stroke='var(--green)';
+    fill.classList.add('done');
+    msg.textContent='GO!';
+    msg.className='rt-msg go';
+  } else {
+    fill.style.stroke='var(--blue)';
+    fill.classList.remove('done');
+    msg.textContent='REST UP';
+    msg.className='rt-msg';
   }
 }
 
-function copyWorkoutToClipboard(entry){
-  const payload=JSON.stringify({
-    type:'531_workout',
-    lift:entry.liftDisplay||entry.lift,
-    week:entry.weekLabel||entry.week,
-    cycle:entry.cycle,
-    duration:entry.duration,
-    calories:estimateCalories(entry),
-    volume:Math.round(entry.totalVolume||0),
-    e1rm:entry.bestE1rm||null,
-    sets:entry.mainSets?entry.mainSets.length:0,
-    avgRpe:entry.avgRpe||null,
-    date:new Date().toISOString()
-  });
-  navigator.clipboard.writeText(payload).then(()=>{
-    toast('Workout data copied to clipboard ✓');
-  }).catch(()=>{
-    toast('Copied! (clipboard may need permission)');
-  });
-}
-
-function estimateCalories(entry){
-  const base={squat:425,bench:300,dead:425,press:300,mrut:350};
-  const liftKey=entry.lift?.toLowerCase().includes('squat')?'squat':
-    entry.lift?.toLowerCase().includes('bench')?'bench':
-    entry.lift?.toLowerCase().includes('dead')?'dead':
-    entry.lift?.toLowerCase().includes('press')?'press':'mrut';
-  const perMin=base[liftKey]/(entry.type==='mrut'?50:65);
-  return Math.round(perMin*(entry.duration||60));
-}
-
-function launchAutoLogger(entry){
-  copyWorkoutToClipboard(entry);
+function onRestComplete(){
+  // Subtle vibration if available
+  if(navigator.vibrate)navigator.vibrate([200,100,200]);
+  // After 2s auto-hide timer and show next set
   setTimeout(()=>{
-    window.location.href=`shortcuts://run-shortcut?name=${encodeURIComponent('5/3/1 Auto Logger')}`;
-  },800);
+    document.getElementById('rest-timer').style.display='none';
+    renderMainLiftUI();
+  },2000);
+}
+
+function skipRest(){
+  if(_restTimer){clearInterval(_restTimer);_restTimer=null;}
+  document.getElementById('rest-timer').style.display='none';
+  renderMainLiftUI();
+}
+
+function addRestTime(seconds){
+  _restRemaining+=seconds;
+  _restTotal+=seconds;
+  updateRestDisplay();
+}
+
+// ============ AMRAP COACHING ============
+function showAmrapCoach(week,reps){
+  const box=document.getElementById('amrap-coach');
+  const txt=document.getElementById('amrap-coach-text');
+  if(!box||!txt)return;
+  let msg='';
+  if(week===1)msg=`Target <strong>${reps>5?reps:reps+3}+ reps</strong>. Week 1 — push hard, 1–2 reps in reserve.`;
+  else if(week===2)msg=`Target <strong>${reps>3?reps:reps+2}+ reps</strong>. Week 2 — solid effort, stop just before failure.`;
+  else if(week===3)msg=`This is your <strong>max effort set</strong>. Week 3 — go for a PR if you feel it.`;
+  box.style.display=msg?'block':'none';
+  txt.innerHTML=msg;
 }
 
 init();
