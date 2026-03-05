@@ -480,7 +480,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <!-- MANUAL LIFT OVERRIDE (shown for custom + as override option) -->
-    <div id="manual-lift-section">
+    <div id="manual-lift-section" style="display:none;">
       <div class="ct or" style="margin-bottom:10px;">Select Lift</div>
       <div class="lch">
         <div class="lc active" onclick="setLift('squat',this)">Squat</div>
@@ -1321,11 +1321,14 @@ function renderPrescrip(){
 
 // ============ SCHEDULE UI ============
 function renderScheduleUI(){
+  const daySection=document.getElementById('sched-day-section');
+  const manualSection=document.getElementById('manual-lift-section');
+  if(!daySection||!manualSection)return;
   const sched=SCHEDULES[S.schedule];
   const isCustom=S.schedule==='custom';
   // Show/hide sections
-  document.getElementById('sched-day-section').style.display=isCustom?'none':'block';
-  document.getElementById('manual-lift-section').style.display=isCustom?'block':'none';
+  daySection.style.display=isCustom?'none':'block';
+  manualSection.style.display=isCustom?'block':'none';
   if(isCustom){renderPrescrip();return;}
   // Badge name
   const badge=document.getElementById('sched-name-badge');
@@ -1377,7 +1380,7 @@ function renderSchedulePrescrip(day){
     return `<tr><td class="sp2">Set ${i+1}</td><td class="sp2">${Math.round(s.p*100)}%</td><td class="sw">${wt}</td><td>${rep}</td></tr>`;
   }).join('');
   // Second lift preview
-  if(multi&&multi){
+  if(isMulti && multi && day.lifts[1]){
     const lift2=day.lifts[1];
     const tm2=S.tms[lift2];
     multi.style.display='block';
