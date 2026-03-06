@@ -1216,6 +1216,14 @@ let exModalTarget='strength'; // 'strength' or 'mrut'
 // Active session prescribed sets state
 let coulsonSetData={}; // keyed by groupIdx-itemIdx -> [{weight,reps}]
 
+const EXERCISES={
+  Push:['Bench Press','Incline Bench Press','Dumbbell Bench Press','Incline DB Press','Floor Press','DB Floor Press','Close Grip Bench','Overhead Press','Push-Up','Dip','Landmine Press','Cable Chest Fly','Pec Deck'],
+  Pull:['Barbell Row','Dumbbell Row','Cable Row','Chest-Supported Row','T-Bar Row','Pull-Up','Chin-Up','Lat Pulldown','Face Pull','Band Pull-Apart','Inverted Row','Cable Pullover','Rear Delt Fly'],
+  Legs:['Squat','Front Squat','Goblet Squat','Box Squat','Deadlift','Romanian Deadlift','Single Leg RDL','Leg Press','Bulgarian Split Squat','Walking Lunge','Reverse Lunge','Step-Up','Hip Thrust','Glute Bridge','Leg Curl','Leg Extension','Calf Raise'],
+  Core:['Plank','Side Plank','Ab Wheel','Hanging Leg Raise','Cable Crunch','Pallof Press','Dead Bug','Bird Dog','Suitcase Carry','Farmer Carry','Copenhagen Plank','Hollow Hold','V-Up','Russian Twist'],
+  Cond:['Jump Rope','Battle Rope','Box Jump','Sled Push','Prowler','Assault Bike','Row','Ski Erg','Kettlebell Swing','Burpee','Mountain Climber','Bear Crawl','Shuttle Run']
+};
+
 // ============ STORAGE ============
 function save(){try{localStorage.setItem('531v5',JSON.stringify(S));}catch(e){}}
 function load(){try{const d=localStorage.getItem('531v5');if(d){const p=JSON.parse(d);S={...S,...p};}}catch(e){}}
@@ -1657,11 +1665,11 @@ function labelClass(type){return type==='superset'?'sup':type==='circuit'?'cir':
 
 function renderCoulsonPrescribed(){
   const plan=getCoulsonPlan();
-  if(!S.session.deletedGroups)S.session.deletedGroups=[];
+  if(!S.session.deletedItems)S.session.deletedItems=[];
   document.getElementById('coulson-header').innerHTML=`<div class="ch-title">${plan.label}</div><div class="ch-sub">${plan.desc}</div>`;
   document.getElementById('coulson-prescribed').innerHTML=plan.groups.map((g,gi)=>{
-    if(S.session.deletedGroups.includes(gi))return'';
     const itemsHTML=g.items.map((item,ii)=>{
+      if(S.session.deletedItems.includes(`${gi}-${ii}`))return'';
       const sets=ensureSetData(gi,ii,item.sets,item.reps,item.w);
       const setsHTML=sets.map((set,si)=>`
         <div class="set-row-inp">
@@ -1673,7 +1681,10 @@ function renderCoulsonPrescribed(){
         </div>`).join('');
       const vol=sets.reduce((t,s)=>t+(parseFloat(s.weight)||0)*(parseInt(s.reps)||0),0);
       return `<div class="ex-row">
-        <div class="ex-name">${item.name}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div class="ex-name" style="margin-bottom:0;">${item.name}</div>
+          ${g.deletable?`<button class="btn xs red" onclick="deleteCoulsonItem(${gi},${ii})">REMOVE</button>`:''}
+        </div>
         <div class="ex-pres">Prescribed: <strong>${item.pres}</strong>&nbsp;&nbsp;Rest: ${item.rest}</div>
         <div class="set-rows-wrap">${setsHTML}</div>
         <div class="add-set-row">
@@ -1682,22 +1693,24 @@ function renderCoulsonPrescribed(){
         </div>
       </div>`;
     }).join('');
-    const delBtn=g.deletable?`<button class="btn xs red" onclick="deleteCoulsonGroup(${gi})" style="margin-left:auto;">REMOVE</button>`:'';
     return `<div class="ex-group ${groupClass(g.type)}">
-      <div style="display:flex;align-items:center;margin-bottom:8px;">
-        <div class="eg-label ${labelClass(g.type)}" style="margin-bottom:0;flex:1;">${g.label}</div>
-        ${delBtn}
-      </div>
+      <div class="eg-label ${labelClass(g.type)}">${g.label}</div>
       ${itemsHTML}
     </div>`;
   }).join('');
   renderExtras();
 }
-function deleteCoulsonGroup(gi){
-  if(!S.session.deletedGroups)S.session.deletedGroups=[];
-  S.session.deletedGroups.push(gi);
+function deleteCoulsonItem(gi,ii){
+  if(!S.session.deletedItems)S.session.deletedItems=[];
+  S.session.deletedItems.push(`${gi}-${ii}`);
   renderCoulsonPrescribed();
-  toast('Group removed for this session');
+  toast('Exercise removed for this session');
+}
+function deleteMRUTItem(gi,ii){
+  if(!S.session.deletedItems)S.session.deletedItems=[];
+  S.session.deletedItems.push(`${gi}-${ii}`);
+  showMRUTSession();
+  toast('Exercise removed for this session');
 }
 function updateCoulsonSet(gi,ii,si,field,val){
   const key=`${gi}-${ii}`;
@@ -1722,10 +1735,12 @@ function removeCoulsonSet(gi,ii,si){
 // ============ MRUT SESSION ============
 function showMRUTSession(){
   showPhase('3-mrut');
+  if(!S.session.deletedItems)S.session.deletedItems=[];
   const plan=S.session.mrutNum===2?COULSON.mrut2:COULSON.mrut4;
   document.getElementById('mrut-session-title').textContent=`🔥 ${plan.label}`;
   document.getElementById('mrut-prescribed').innerHTML=plan.groups.map((g,gi)=>{
     const itemsHTML=g.items.map((item,ii)=>{
+      if(S.session.deletedItems.includes(`${gi}-${ii}`))return'';
       const sets=ensureSetData(gi,ii,item.sets,item.reps,item.w);
       const setsHTML=sets.map((set,si)=>`
         <div class="set-row-inp">
@@ -1737,7 +1752,10 @@ function showMRUTSession(){
         </div>`).join('');
       const vol=sets.reduce((t,s)=>t+(parseFloat(s.weight)||0)*(parseInt(s.reps)||0),0);
       return `<div class="ex-row">
-        <div class="ex-name">${item.name}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div class="ex-name" style="margin-bottom:0;">${item.name}</div>
+          <button class="btn xs red" onclick="deleteMRUTItem(${gi},${ii})">REMOVE</button>
+        </div>
         <div class="ex-pres">Prescribed: <strong>${item.pres}</strong>&nbsp;&nbsp;Rest: ${item.rest}</div>
         <div class="set-rows-wrap">${setsHTML}</div>
         <div class="add-set-row">
