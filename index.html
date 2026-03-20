@@ -1680,6 +1680,7 @@ function renderCoulsonPrescribed(){
           <button class="rm-s" onclick="removeCoulsonSet(${gi},${ii},${si})">✕</button>
         </div>`).join('');
       const vol=sets.reduce((t,s)=>t+(parseFloat(s.weight)||0)*(parseInt(s.reps)||0),0);
+      const volLine=vol>0?`<span class="set-vol">Vol: <strong style="color:var(--blue)">${vol.toLocaleString()} lbs</strong></span>`:'<span class="set-vol" style="color:rgba(255,255,255,0.25);">BW / Timed</span>';
       return `<div class="ex-row">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
           <div class="ex-name" style="margin-bottom:0;">${item.name}</div>
@@ -1689,7 +1690,7 @@ function renderCoulsonPrescribed(){
         <div class="set-rows-wrap">${setsHTML}</div>
         <div class="add-set-row">
           <button class="btn xs sec" onclick="addCoulsonSet(${gi},${ii},'${item.reps}')">＋ Set</button>
-          <span class="set-vol">Vol: <strong style="color:var(--blue)">${vol.toLocaleString()} lbs</strong></span>
+          ${volLine}
         </div>
       </div>`;
     }).join('');
@@ -1751,6 +1752,7 @@ function showMRUTSession(){
           <button class="rm-s" onclick="removeCoulsonSet(${gi},${ii},${si})">✕</button>
         </div>`).join('');
       const vol=sets.reduce((t,s)=>t+(parseFloat(s.weight)||0)*(parseInt(s.reps)||0),0);
+      const volLine=vol>0?`<span class="set-vol">Vol: <strong style="color:var(--blue)">${vol.toLocaleString()} lbs</strong></span>`:'<span class="set-vol" style="color:rgba(255,255,255,0.25);">BW / Timed</span>';
       return `<div class="ex-row">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
           <div class="ex-name" style="margin-bottom:0;">${item.name}</div>
@@ -1760,7 +1762,7 @@ function showMRUTSession(){
         <div class="set-rows-wrap">${setsHTML}</div>
         <div class="add-set-row">
           <button class="btn xs sec" onclick="addCoulsonSet(${gi},${ii},'${item.reps}')">＋ Set</button>
-          <span class="set-vol">Vol: <strong style="color:var(--blue)">${vol.toLocaleString()} lbs</strong></span>
+          ${volLine}
         </div>
       </div>`;
     }).join('');
@@ -1879,13 +1881,16 @@ function addExercise(name){
 // ============ FINISH SESSION ============
 function buildCoulsonSetsLog(plan){
   const groups=[];
+  const deleted=S.session.deletedItems||[];
   plan.groups.forEach((g,gi)=>{
     const items=g.items.map((item,ii)=>{
+      if(deleted.includes(`${gi}-${ii}`))return null; // skip removed exercises
       const key=`${gi}-${ii}`;
-      const sets=(coulsonSetData[key]||[]).map(s=>({weight:parseFloat(s.weight)||0,reps:parseInt(s.reps)||0}));
+      // Keep reps as string to preserve units like '45s' for timed exercises
+      const sets=(coulsonSetData[key]||[]).map(s=>({weight:parseFloat(s.weight)||0,reps:s.reps||0}));
       return {name:item.name,prescribed:item.pres,sets};
-    });
-    groups.push({label:g.label,type:g.type,items});
+    }).filter(Boolean);
+    if(items.length)groups.push({label:g.label,type:g.type,items});
   });
   return groups;
 }
@@ -1914,9 +1919,10 @@ function finishSession(){
   const dur=parseInt(document.getElementById('sess-dur').value)||60;
   const notes=document.getElementById('sess-notes').value.trim();
 
-  // Aggregate all lifts (completedLifts queue + current if not yet saved)
+  // Aggregate all lifts — completedLifts already has everything pushed by doneMainLift()
+  // Only add current lift if it wasn't already saved (prevents double-log on single-lift days)
   const allLifts=[...sess.completedLifts];
-  if(sess.mainSets.length&&!allLifts.find(l=>l.lift===sess.lift&&l.mainSets===sess.mainSets)){
+  if(sess.mainSets.length && !allLifts.some(l=>l.lift===sess.lift)){
     allLifts.push({lift:sess.lift,liftLabel:sess.liftLabel,tm:sess.tm,mainSets:sess.mainSets});
   }
   const allMainSets=allLifts.flatMap(l=>l.mainSets);
@@ -2052,10 +2058,16 @@ function renderLog(){
           <div class="ex-sec">
             <div class="ex-sec-t">${g.label}</div>
             ${g.items.map(item=>{
-              const vol=item.sets.reduce((t,s)=>t+s.weight*s.reps,0);
+              const vol=item.sets.reduce((t,s)=>t+(parseFloat(s.weight)||0)*(parseInt(s.reps)||0),0);
+              const hasWeightedSets=vol>0;
               return `<div style="margin-bottom:6px;"><div style="font-size:12px;color:#93c5fd;margin-bottom:3px;">${item.name}</div>
-                ${item.sets.map((s,j)=>`<div class="sdr"><span class="sdr-n">${j+1}</span><span class="sdr-w">${s.weight||'—'}lbs</span><span style="color:var(--slate);font-size:11px;"> × </span><span class="sdr-r">${s.reps||'—'}</span><span class="sdr-e">${(s.weight*s.reps).toLocaleString()} lbs</span></div>`).join('')}
-                <div style="font-size:11px;color:var(--slate);margin-top:3px;">Vol: <strong style="color:var(--blue)">${vol.toLocaleString()} lbs</strong></div>
+                ${item.sets.map((s,j)=>{
+                  const repDisplay=s.reps||'—';
+                  const isTimed=typeof s.reps==='string'&&isNaN(parseFloat(s.reps));
+                  const volDisplay=isTimed?'':`${((parseFloat(s.weight)||0)*(parseInt(s.reps)||0)).toLocaleString()} lbs`;
+                  return `<div class="sdr"><span class="sdr-n">${j+1}</span><span class="sdr-w">${s.weight||'BW'}</span><span style="color:var(--slate);font-size:11px;"> × </span><span class="sdr-r">${repDisplay}</span>${volDisplay?`<span class="sdr-e">${volDisplay}</span>`:''}</div>`;
+                }).join('')}
+                ${hasWeightedSets?`<div style="font-size:11px;color:var(--slate);margin-top:3px;">Vol: <strong style="color:var(--blue)">${vol.toLocaleString()} lbs</strong></div>`:''}
               </div>`;
             }).join('')}
           </div>`).join(''):''}
