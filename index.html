@@ -401,6 +401,20 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   </div>
 </div>
 
+<!-- EDIT LOG MODAL -->
+
+<div class="mo" id="edit-modal">
+  <div class="mb">
+    <div class="mt">✏️ Edit Session</div>
+    <div class="ms" id="edit-modal-sub">SQUAT · WEEK 1</div>
+    <div id="edit-modal-body"></div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn grn" onclick="saveEditLog()" style="flex:1;">SAVE CHANGES</button>
+      <button class="btn sec" onclick="closeEditModal()" style="flex:1;">CANCEL</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== CALC ===== -->
 
 <div class="sc active" id="sc-calc">
@@ -2023,6 +2037,7 @@ function renderLog(){
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
           <button class="del-btn" onclick="delLog(${e.id})">✕</button>
           <button class="exp-btn" onclick="toggleDetail(${e.id})">DETAIL</button>
+          <button class="exp-btn" onclick="openEditLog(${e.id})" style="color:var(--gold);border-color:rgba(255,215,0,0.3);">EDIT</button>
         </div>
       </div>
       <div class="stat-strip">
@@ -2086,322 +2101,401 @@ function renderLog(){
     </div>`).join('');
 }
 function toggleDetail(id){document.getElementById('det-'+id)?.classList.toggle('open');}
-function renderTrend(){
-  const lift=document.getElementById('trend-sel')?.value||'Squat';
-  const entries=S.log.filter(e=>e.lift===lift&&e.bestE1rm);
-  const tc=document.getElementById('trend-content');
-  if(!tc)return;
-  if(entries.length<2){
-    tc.innerHTML=`<p style="font-size:12px;color:var(--slate);text-align:center;padding:16px 0;">Log ${entries.length===0?'2':'1'} more ${lift} session${entries.length===0?'s':''} to see the trend chart.</p>`;
-    return;
-  }
-  const pts=entries.slice(0,12).reverse();
-  const vals=pts.map(e=>e.bestE1rm);
-  const minV=Math.min(...vals)-10;
-  const maxV=Math.max(...vals)+10;
-  const W=320,H=120,padL=36,padR=8,padT=10,padB=28;
-  const cW=W-padL-padR,cH=H-padT-padB;
-  const xScale=(i)=>padL+i*(cW/(pts.length-1));
-  const yScale=(v)=>padT+cH-(cH*(v-minV)/(maxV-minV));
-  // Grid lines
-  const gridVals=[minV,Math.round((minV+maxV)/2),maxV].map(v=>Math.round(v/5)*5);
-  const gridLines=gridVals.map(v=>{
-    const y=yScale(v);
-    return `<line class="tc-grid" x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}"/>
-            <text class="tc-ylabel" x="${padL-4}" y="${y+3}">${v}</text>`;
-  }).join('');
-  // Area path
-  const linePts=pts.map((e,i)=>`${i===0?'M':'L'}${xScale(i)},${yScale(e.bestE1rm)}`).join(' ');
-  const areaPath=`${linePts} L${xScale(pts.length-1)},${H-padB} L${padL},${H-padB} Z`;
-  // Dots and labels
-  const dotsSVG=pts.map((e,i)=>{
-    const x=xScale(i),y=yScale(e.bestE1rm);
-    const lbl=e.date.split(',')[0];
-    const isMax=e.bestE1rm===Math.max(...vals);
-    return `<circle class="tc-dot" cx="${x}" cy="${y}" r="${isMax?5:3.5}" fill="${isMax?'var(--gold)':'#93c5fd'}" stroke="#0a3d1f" stroke-width="1.5"/>
-            ${isMax?`<text class="tc-val" x="${x}" y="${y-8}">${e.bestE1rm}</text>`:''}
-            <text class="tc-label" x="${x}" y="${H-padB+14}">${lbl.replace(' ','&#10;')}</text>`;
-  }).join('');
-  const best=Math.max(...vals);
-  const latest=vals[vals.length-1];
-  const delta=latest-(vals[0]||latest);
-  tc.innerHTML=`
-    <div class="trend-chart-wrap">
-      <svg class="trend-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <linearGradient id="tcGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.3"/>
-            <stop offset="100%" stop-color="#93c5fd" stop-opacity="0"/>
-          </linearGradient>
-        </defs>
-        ${gridLines}
-        <path class="tc-area" d="${areaPath}"/>
-        <path class="tc-line" d="${linePts}"/>
-        ${dotsSVG}
-      </svg>
+
+// ============ EDIT LOG ============
+let _editId=null;
+
+function openEditLog(id){
+  const entry=S.log.find(e=>e.id===id);
+  if(!entry)return;
+  _editId=id;
+  document.getElementById('edit-modal-sub').textContent=`${entry.liftDisplay||entry.lift} · ${entry.weekLabel||entry.week}`;
+
+  // Build editable main sets — handle both single and multi-lift
+  const setsToEdit=entry.mainSets||[];
+  const setsHTML=setsToEdit.length?`
+    <div style="font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Main Sets</div>
+    ${setsToEdit.map((s,i)=>`
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:7px;">
+        <span style="font-size:11px;color:var(--slate);width:18px;">${i+1}</span>
+        <input type="number" id="es-w-${i}" value="${s.weight}" placeholder="lbs" inputmode="decimal"
+          style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.2);border-radius:5px;color:var(--green);font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;padding:8px 6px;width:75px;text-align:center;-webkit-appearance:none;">
+        <span style="color:var(--slate);font-size:12px;">×</span>
+        <input type="number" id="es-r-${i}" value="${s.reps}" placeholder="reps" inputmode="decimal"
+          style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.2);border-radius:5px;color:var(--orange);font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;padding:8px 6px;width:60px;text-align:center;-webkit-appearance:none;">
+        <input type="number" id="es-rpe-${i}" value="${s.rpe||6}" min="1" max="10" placeholder="RPE" inputmode="decimal"
+          style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.2);border-radius:5px;color:var(--slate);font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;padding:8px 4px;width:50px;text-align:center;-webkit-appearance:none;">
+        <button onclick="removeEditSet(${i})" style="background:none;border:none;color:rgba(239,68,68,0.5);font-size:16px;cursor:pointer;padding:4px;">✕</button>
+      </div>`).join('')}
+    <button onclick="addEditSet()" class="btn xs sec" style="margin-bottom:12px;">＋ Add Set</button>
+    <div class="div"></div>`:
+    `<p style="font-size:12px;color:var(--slate);margin-bottom:12px;">No main sets recorded.</p>`;
+
+  document.getElementById('edit-modal-body').innerHTML=`
+    ${setsHTML}
+    <div style="font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Session Info</div>
+    <div class="ir" style="margin-bottom:8px;">
+      <label>Duration (minutes)</label>
+      <input type="number" id="es-dur" value="${entry.duration||60}" inputmode="decimal">
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:12px;padding:0 4px;">
-      <span style="color:var(--slate)">Best: <strong style="color:var(--gold)">${best} lbs</strong></span>
-      <span style="color:var(--slate)">Latest: <strong style="color:#93c5fd">${latest} lbs</strong></span>
-      <span style="color:${delta>=0?'var(--green)':'var(--red)'}">${delta>=0?'▲':'▼'} ${Math.abs(delta)} lbs</span>
-    </div>`;
+    <div class="ir" style="margin-bottom:0;">
+      <label>Notes</label>
+      <textarea id="es-notes" style="background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:white;font-family:'Rajdhani',sans-serif;font-size:14px;padding:9px 12px;width:100%;resize:none;min-height:60px;">${entry.notes||''}</textarea>
+
+```
+</div>`;
+```
+
+document.getElementById(‘edit-modal’).classList.add(‘open’);
+}
+
+function removeEditSet(i){
+// Remove the set row from DOM
+const entry=S.log.find(e=>e.id===_editId);
+if(!entry)return;
+entry.mainSets.splice(i,1);
+openEditLog(_editId); // re-render
+}
+
+function addEditSet(){
+const entry=S.log.find(e=>e.id===_editId);
+if(!entry)return;
+entry.mainSets.push({weight:0,reps:0,rpe:7,e1rm:0,prescribed_w:0,prescribed_r:0,pct:0,amrap:false});
+openEditLog(_editId); // re-render
+}
+
+function saveEditLog(){
+const entry=S.log.find(e=>e.id===_editId);
+if(!entry){closeEditModal();return;}
+
+// Read edited sets back
+const n=entry.mainSets.length;
+const updatedSets=[];
+for(let i=0;i<n;i++){
+const wEl=document.getElementById(`es-w-${i}`);
+const rEl=document.getElementById(`es-r-${i}`);
+const rpeEl=document.getElementById(`es-rpe-${i}`);
+if(!wEl)continue;
+const w=parseFloat(wEl.value)||0;
+const reps=parseInt(rEl.value)||0;
+const rpe=parseInt(rpeEl.value)||6;
+const e1rm=reps===1?w:Math.round(Math.round(w*(1+reps/30)/5)*5);
+updatedSets.push({…entry.mainSets[i],weight:w,reps,rpe,e1rm});
+}
+entry.mainSets=updatedSets;
+
+// Update liftBreakdown if multi-lift (first lift)
+if(entry.liftBreakdown&&entry.liftBreakdown.length>0){
+entry.liftBreakdown[0].mainSets=updatedSets;
+}
+
+// Recalculate derived stats
+const allSets=entry.liftBreakdown
+?entry.liftBreakdown.flatMap(l=>l.mainSets)
+:updatedSets;
+const mainVol=allSets.reduce((t,s)=>t+s.weight*s.reps,0);
+const coulsonVol=(entry.coulsonSets||[]).reduce((t,g)=>
+t+g.items.reduce((t2,item)=>
+t2+item.sets.reduce((t3,s)=>t3+(parseFloat(s.weight)||0)*(parseInt(s.reps)||0),0)
+,0)
+,0);
+const extrasVol=(entry.assistance||[]).reduce((t,ex)=>
+t+ex.sets.reduce((t2,s)=>t2+(parseFloat(s.weight)||0)*(parseInt(s.reps)||0),0)
+,0);
+entry.totalVolume=mainVol+coulsonVol+extrasVol;
+entry.bestE1rm=allSets.length?Math.max(…allSets.map(s=>s.e1rm).filter(v=>v>0)):null;
+entry.avgRpe=allSets.length?Math.round(allSets.reduce((t,s)=>t+s.rpe,0)/allSets.length*10)/10:null;
+entry.topSet=allSets.length?allSets.reduce((b,s)=>s.weight*s.reps>b.weight*b.reps?s:b,allSets[0]):null;
+entry.duration=parseInt(document.getElementById(‘es-dur’).value)||60;
+entry.notes=(document.getElementById(‘es-notes’).value||’’).trim();
+
+save();
+closeEditModal();
+renderLog();
+toast(‘Session updated ✓’);
+}
+
+function closeEditModal(){
+document.getElementById(‘edit-modal’).classList.remove(‘open’);
+_editId=null;
+}
+function renderTrend(){
+const lift=document.getElementById(‘trend-sel’)?.value||‘Squat’;
+const entries=S.log.filter(e=>e.lift===lift&&e.bestE1rm);
+const tc=document.getElementById(‘trend-content’);
+if(!tc)return;
+if(entries.length<2){
+tc.innerHTML=`<p style="font-size:12px;color:var(--slate);text-align:center;padding:16px 0;">Log ${entries.length===0?'2':'1'} more ${lift} session${entries.length===0?'s':''} to see the trend chart.</p>`;
+return;
+}
+const pts=entries.slice(0,12).reverse();
+const vals=pts.map(e=>e.bestE1rm);
+const minV=Math.min(…vals)-10;
+const maxV=Math.max(…vals)+10;
+const W=320,H=120,padL=36,padR=8,padT=10,padB=28;
+const cW=W-padL-padR,cH=H-padT-padB;
+const xScale=(i)=>padL+i*(cW/(pts.length-1));
+const yScale=(v)=>padT+cH-(cH*(v-minV)/(maxV-minV));
+// Grid lines
+const gridVals=[minV,Math.round((minV+maxV)/2),maxV].map(v=>Math.round(v/5)*5);
+const gridLines=gridVals.map(v=>{
+const y=yScale(v);
+return `<line class="tc-grid" x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}"/> <text class="tc-ylabel" x="${padL-4}" y="${y+3}">${v}</text>`;
+}).join(’’);
+// Area path
+const linePts=pts.map((e,i)=>`${i===0?'M':'L'}${xScale(i)},${yScale(e.bestE1rm)}`).join(’ ‘);
+const areaPath=`${linePts} L${xScale(pts.length-1)},${H-padB} L${padL},${H-padB} Z`;
+// Dots and labels
+const dotsSVG=pts.map((e,i)=>{
+const x=xScale(i),y=yScale(e.bestE1rm);
+const lbl=e.date.split(’,’)[0];
+const isMax=e.bestE1rm===Math.max(…vals);
+return `<circle class="tc-dot" cx="${x}" cy="${y}" r="${isMax?5:3.5}" fill="${isMax?'var(--gold)':'#93c5fd'}" stroke="#0a3d1f" stroke-width="1.5"/> ${isMax?`<text class="tc-val" x="${x}" y="${y-8}">${e.bestE1rm}</text>`:''} <text class="tc-label" x="${x}" y="${H-padB+14}">${lbl.replace(' ','&#10;')}</text>`;
+}).join(’’);
+const best=Math.max(…vals);
+const latest=vals[vals.length-1];
+const delta=latest-(vals[0]||latest);
+tc.innerHTML=` <div class="trend-chart-wrap"> <svg class="trend-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"> <defs> <linearGradient id="tcGrad" x1="0" y1="0" x2="0" y2="1"> <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.3"/> <stop offset="100%" stop-color="#93c5fd" stop-opacity="0"/> </linearGradient> </defs> ${gridLines} <path class="tc-area" d="${areaPath}"/> <path class="tc-line" d="${linePts}"/> ${dotsSVG} </svg> </div> <div style="display:flex;justify-content:space-between;font-size:12px;padding:0 4px;"> <span style="color:var(--slate)">Best: <strong style="color:var(--gold)">${best} lbs</strong></span> <span style="color:var(--slate)">Latest: <strong style="color:#93c5fd">${latest} lbs</strong></span> <span style="color:${delta>=0?'var(--green)':'var(--red)'}">${delta>=0?'▲':'▼'} ${Math.abs(delta)} lbs</span> </div>`;
 }
 function delLog(id){S.log=S.log.filter(e=>e.id!==id);save();renderLog();}
-function clearLog(){if(confirm('Clear all history?')){S.log=[];save();renderLog();}}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+function clearLog(){if(confirm(‘Clear all history?’)){S.log=[];save();renderLog();}}
+function toast(msg){const t=document.getElementById(‘toast’);t.textContent=msg;t.classList.add(‘show’);setTimeout(()=>t.classList.remove(‘show’),2200);}
 
 // ============ ACCORDION ============
 function toggleAcc(id){
-  const body=document.getElementById(id);
-  const arrow=document.getElementById('arrow-'+id);
-  const open=body.style.display!=='none';
-  body.style.display=open?'none':'block';
-  if(arrow)arrow.classList.toggle('open',!open);
+const body=document.getElementById(id);
+const arrow=document.getElementById(‘arrow-’+id);
+const open=body.style.display!==‘none’;
+body.style.display=open?‘none’:‘block’;
+if(arrow)arrow.classList.toggle(‘open’,!open);
 }
 
 // ============ SETTINGS UI ============
 function loadSettingsUI(){
-  const ids={squat:'s-tms',bench:'s-tmb',dead:'s-tmd',press:'s-tmp'};
-  Object.entries(ids).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.value=S.tms[k];});
-  const cyc=document.getElementById('s-cyc');if(cyc)cyc.value=S.cycle;
-  const snI=document.getElementById('sn-input');if(snI)snI.value=S.shortcutName;
-  const dSN=document.getElementById('disp-sn');if(dSN)dSN.textContent=S.shortcutName;
-  renderSettingsTMDisplay();
-  loadScheduleSettings();
+const ids={squat:‘s-tms’,bench:‘s-tmb’,dead:‘s-tmd’,press:‘s-tmp’};
+Object.entries(ids).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.value=S.tms[k];});
+const cyc=document.getElementById(‘s-cyc’);if(cyc)cyc.value=S.cycle;
+const snI=document.getElementById(‘sn-input’);if(snI)snI.value=S.shortcutName;
+const dSN=document.getElementById(‘disp-sn’);if(dSN)dSN.textContent=S.shortcutName;
+renderSettingsTMDisplay();
+loadScheduleSettings();
 }
 function renderSettingsTMDisplay(){
-  const el=document.getElementById('s-tm-disp');if(!el)return;
-  el.innerHTML=[{k:'squat',l:'Squat'},{k:'bench',l:'Bench'},{k:'dead',l:'Deadlift'},{k:'press',l:'Press'}]
-    .map(x=>`<div class="tmi"><div class="tn">${x.l}</div><div class="tv">${S.tms[x.k]}</div><div class="tu">lbs TM</div></div>`).join('');
+const el=document.getElementById(‘s-tm-disp’);if(!el)return;
+el.innerHTML=[{k:‘squat’,l:‘Squat’},{k:‘bench’,l:‘Bench’},{k:‘dead’,l:‘Deadlift’},{k:‘press’,l:‘Press’}]
+.map(x=>`<div class="tmi"><div class="tn">${x.l}</div><div class="tv">${S.tms[x.k]}</div><div class="tu">lbs TM</div></div>`).join(’’);
 }
 function saveSettingsTMs(){
-  const ids={squat:'s-tms',bench:'s-tmb',dead:'s-tmd',press:'s-tmp'};
-  Object.entries(ids).forEach(([k,id])=>{const v=parseFloat(document.getElementById(id)?.value);if(v)S.tms[k]=v;});
-  S.cycle=parseInt(document.getElementById('s-cyc')?.value)||S.cycle;
-  save();renderTMs();renderPrescrip();loadTMInputs();renderSettingsTMDisplay();
-  toast('Training Maxes Saved ✓');
+const ids={squat:‘s-tms’,bench:‘s-tmb’,dead:‘s-tmd’,press:‘s-tmp’};
+Object.entries(ids).forEach(([k,id])=>{const v=parseFloat(document.getElementById(id)?.value);if(v)S.tms[k]=v;});
+S.cycle=parseInt(document.getElementById(‘s-cyc’)?.value)||S.cycle;
+save();renderTMs();renderPrescrip();loadTMInputs();renderSettingsTMDisplay();
+toast(‘Training Maxes Saved ✓’);
 }
 function advanceCycleSettings(){
-  S.tms.squat+=10;S.tms.dead+=10;S.tms.bench+=5;S.tms.press+=5;S.cycle+=1;
-  loadTMInputs();loadSettingsUI();save();renderTMs();renderPrescrip();
-  toast(`Cycle ${S.cycle} — TMs updated ✓`);
+S.tms.squat+=10;S.tms.dead+=10;S.tms.bench+=5;S.tms.press+=5;S.cycle+=1;
+loadTMInputs();loadSettingsUI();save();renderTMs();renderPrescrip();
+toast(`Cycle ${S.cycle} — TMs updated ✓`);
 }
 function resetAll(){
-  if(confirm('Reset ALL app data? This cannot be undone.')){
-    localStorage.removeItem('531v5');
-    location.reload();
-  }
+if(confirm(‘Reset ALL app data? This cannot be undone.’)){
+localStorage.removeItem(‘531v5’);
+location.reload();
+}
 }
 
 // ============ RECOVERY ============
 function loadRecoveryUI(){
-  // Load saved today metrics
-  const today=new Date().toDateString();
-  const saved=S.todayMetrics&&S.todayMetrics.date===today?S.todayMetrics:{};
-  ['hrv','rhr','sleep','energy','soreness','stress'].forEach(k=>{
-    const el=document.getElementById('met-'+k);
-    if(el&&saved[k])el.value=saved[k];
-  });
-  // Compute averages from log (last 7 days of logged entries would carry metrics — for now show baseline)
-  updateHRVAvg();
-  updateRHRAvg();
-  if(S.todayMetrics&&S.todayMetrics.score!==undefined)renderReadinessResult(S.todayMetrics);
-  renderMetricHistory();
+// Load saved today metrics
+const today=new Date().toDateString();
+const saved=S.todayMetrics&&S.todayMetrics.date===today?S.todayMetrics:{};
+[‘hrv’,‘rhr’,‘sleep’,‘energy’,‘soreness’,‘stress’].forEach(k=>{
+const el=document.getElementById(‘met-’+k);
+if(el&&saved[k])el.value=saved[k];
+});
+// Compute averages from log (last 7 days of logged entries would carry metrics — for now show baseline)
+updateHRVAvg();
+updateRHRAvg();
+if(S.todayMetrics&&S.todayMetrics.score!==undefined)renderReadinessResult(S.todayMetrics);
+renderMetricHistory();
 }
 
 function updateHRVAvg(){
-  const hist=S.metricHistory||[];
-  if(!hist.length){document.getElementById('hrv-avg').textContent='—';return;}
-  const vals=hist.slice(0,7).map(d=>d.hrv).filter(Boolean);
-  if(vals.length)document.getElementById('hrv-avg').textContent=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)+' ms';
+const hist=S.metricHistory||[];
+if(!hist.length){document.getElementById(‘hrv-avg’).textContent=’—’;return;}
+const vals=hist.slice(0,7).map(d=>d.hrv).filter(Boolean);
+if(vals.length)document.getElementById(‘hrv-avg’).textContent=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)+’ ms’;
 }
 function updateRHRAvg(){
-  const hist=S.metricHistory||[];
-  if(!hist.length){document.getElementById('rhr-avg').textContent='—';return;}
-  const vals=hist.slice(0,7).map(d=>d.rhr).filter(Boolean);
-  if(vals.length)document.getElementById('rhr-avg').textContent=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)+' bpm';
+const hist=S.metricHistory||[];
+if(!hist.length){document.getElementById(‘rhr-avg’).textContent=’—’;return;}
+const vals=hist.slice(0,7).map(d=>d.rhr).filter(Boolean);
+if(vals.length)document.getElementById(‘rhr-avg’).textContent=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)+’ bpm’;
 }
 
 function saveMetrics(){
-  const today=new Date().toDateString();
-  const m={
-    date:today,
-    hrv:parseFloat(document.getElementById('met-hrv')?.value)||null,
-    rhr:parseFloat(document.getElementById('met-rhr')?.value)||null,
-    sleep:parseFloat(document.getElementById('met-sleep')?.value)||null,
-    energy:parseInt(document.getElementById('met-energy')?.value)||null,
-    soreness:parseInt(document.getElementById('met-soreness')?.value)||null,
-    stress:parseInt(document.getElementById('met-stress')?.value)||null
-  };
-  S.todayMetrics=m;
-  save();
+const today=new Date().toDateString();
+const m={
+date:today,
+hrv:parseFloat(document.getElementById(‘met-hrv’)?.value)||null,
+rhr:parseFloat(document.getElementById(‘met-rhr’)?.value)||null,
+sleep:parseFloat(document.getElementById(‘met-sleep’)?.value)||null,
+energy:parseInt(document.getElementById(‘met-energy’)?.value)||null,
+soreness:parseInt(document.getElementById(‘met-soreness’)?.value)||null,
+stress:parseInt(document.getElementById(‘met-stress’)?.value)||null
+};
+S.todayMetrics=m;
+save();
 }
 
 function calcReadiness(){
-  saveMetrics();
-  const m=S.todayMetrics;
-  if(!m){toast('Enter at least some metrics!');return;}
+saveMetrics();
+const m=S.todayMetrics;
+if(!m){toast(‘Enter at least some metrics!’);return;}
 
-  const hist=S.metricHistory||[];
-  const scores={};
+const hist=S.metricHistory||[];
+const scores={};
 
-  // HRV score (higher = better, compare to personal average)
-  if(m.hrv){
-    const vals=hist.slice(0,14).map(d=>d.hrv).filter(Boolean);
-    if(vals.length>=3){
-      const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
-      const ratio=m.hrv/avg;
-      scores.hrv=ratio>=1.1?100:ratio>=0.95?75:ratio>=0.8?45:20;
-    } else {
-      // No history — use absolute benchmarks
-      scores.hrv=m.hrv>=60?90:m.hrv>=45?75:m.hrv>=30?55:35;
-    }
-  }
+// HRV score (higher = better, compare to personal average)
+if(m.hrv){
+const vals=hist.slice(0,14).map(d=>d.hrv).filter(Boolean);
+if(vals.length>=3){
+const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+const ratio=m.hrv/avg;
+scores.hrv=ratio>=1.1?100:ratio>=0.95?75:ratio>=0.8?45:20;
+} else {
+// No history — use absolute benchmarks
+scores.hrv=m.hrv>=60?90:m.hrv>=45?75:m.hrv>=30?55:35;
+}
+}
 
-  // Resting HR score (lower = better)
-  if(m.rhr){
-    const vals=hist.slice(0,14).map(d=>d.rhr).filter(Boolean);
-    if(vals.length>=3){
-      const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
-      const delta=m.rhr-avg;
-      scores.rhr=delta<=-2?100:delta<=0?80:delta<=3?55:delta<=6?35:15;
-    } else {
-      scores.rhr=m.rhr<=55?90:m.rhr<=65?75:m.rhr<=75?55:35;
-    }
-  }
+// Resting HR score (lower = better)
+if(m.rhr){
+const vals=hist.slice(0,14).map(d=>d.rhr).filter(Boolean);
+if(vals.length>=3){
+const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+const delta=m.rhr-avg;
+scores.rhr=delta<=-2?100:delta<=0?80:delta<=3?55:delta<=6?35:15;
+} else {
+scores.rhr=m.rhr<=55?90:m.rhr<=65?75:m.rhr<=75?55:35;
+}
+}
 
-  // Sleep score
-  if(m.sleep){
-    scores.sleep=m.sleep>=8?100:m.sleep>=7?85:m.sleep>=6?60:m.sleep>=5?35:15;
-  }
+// Sleep score
+if(m.sleep){
+scores.sleep=m.sleep>=8?100:m.sleep>=7?85:m.sleep>=6?60:m.sleep>=5?35:15;
+}
 
-  // Subjective energy
-  if(m.energy) scores.energy=Math.round(m.energy*10);
+// Subjective energy
+if(m.energy) scores.energy=Math.round(m.energy*10);
 
-  // Soreness (inverted — less is better)
-  if(m.soreness) scores.soreness=Math.round((11-m.soreness)*10);
+// Soreness (inverted — less is better)
+if(m.soreness) scores.soreness=Math.round((11-m.soreness)*10);
 
-  // Stress (inverted)
-  if(m.stress) scores.stress=Math.round((11-m.stress)*10);
+// Stress (inverted)
+if(m.stress) scores.stress=Math.round((11-m.stress)*10);
 
-  // Weighted composite
-  const weights={hrv:0.25,rhr:0.2,sleep:0.25,energy:0.15,soreness:0.1,stress:0.05};
-  let total=0,wSum=0;
-  Object.entries(scores).forEach(([k,v])=>{total+=v*(weights[k]||0.1);wSum+=(weights[k]||0.1);});
-  const score=wSum>0?Math.round(total/wSum):null;
+// Weighted composite
+const weights={hrv:0.25,rhr:0.2,sleep:0.25,energy:0.15,soreness:0.1,stress:0.05};
+let total=0,wSum=0;
+Object.entries(scores).forEach(([k,v])=>{total+=v*(weights[k]||0.1);wSum+=(weights[k]||0.1);});
+const score=wSum>0?Math.round(total/wSum):null;
 
-  // Color feedback on boxes
-  const colorMap={hrv:'hrv',rhr:'rhr',sleep:'sleep',energy:'energy',soreness:'soreness',stress:'stress'};
-  Object.entries(scores).forEach(([k,v])=>{
-    const box=document.getElementById('mb-'+k);
-    if(box){box.classList.remove('good','warn','bad');box.classList.add(v>=70?'good':v>=45?'warn':'bad');}
-  });
+// Color feedback on boxes
+const colorMap={hrv:‘hrv’,rhr:‘rhr’,sleep:‘sleep’,energy:‘energy’,soreness:‘soreness’,stress:‘stress’};
+Object.entries(scores).forEach(([k,v])=>{
+const box=document.getElementById(‘mb-’+k);
+if(box){box.classList.remove(‘good’,‘warn’,‘bad’);box.classList.add(v>=70?‘good’:v>=45?‘warn’:‘bad’);}
+});
 
-  const result={...m,score,scores};
-  S.todayMetrics=result;
+const result={…m,score,scores};
+S.todayMetrics=result;
 
-  // Save to history
-  if(!S.metricHistory)S.metricHistory=[];
-  const todayStr=new Date().toDateString();
-  S.metricHistory=S.metricHistory.filter(d=>d.date!==todayStr);
-  S.metricHistory.unshift({...result});
-  S.metricHistory=S.metricHistory.slice(0,30);
-  save();
+// Save to history
+if(!S.metricHistory)S.metricHistory=[];
+const todayStr=new Date().toDateString();
+S.metricHistory=S.metricHistory.filter(d=>d.date!==todayStr);
+S.metricHistory.unshift({…result});
+S.metricHistory=S.metricHistory.slice(0,30);
+save();
 
-  renderReadinessResult(result);
-  renderMetricHistory();
+renderReadinessResult(result);
+renderMetricHistory();
 }
 
 function renderReadinessResult(m){
-  if(m.score===undefined||m.score===null)return;
-  const score=m.score;
-  const isGreen=score>=70,isYellow=score>=45&&score<70;
-  const color=isGreen?'var(--green)':isYellow?'var(--orange)':'var(--red)';
-  const ring=document.getElementById('readiness-ring');
-  const sc=document.getElementById('readiness-score');
-  const lbl=document.getElementById('readiness-label');
-  const rec=document.getElementById('readiness-rec');
+if(m.score===undefined||m.score===null)return;
+const score=m.score;
+const isGreen=score>=70,isYellow=score>=45&&score<70;
+const color=isGreen?‘var(–green)’:isYellow?‘var(–orange)’:‘var(–red)’;
+const ring=document.getElementById(‘readiness-ring’);
+const sc=document.getElementById(‘readiness-score’);
+const lbl=document.getElementById(‘readiness-label’);
+const rec=document.getElementById(‘readiness-rec’);
 
-  ring.style.borderColor=color;ring.style.background=`${color}11`;
-  sc.style.color=color;sc.textContent=score;
-  lbl.style.color=color;
+ring.style.borderColor=color;ring.style.background=`${color}11`;
+sc.style.color=color;sc.textContent=score;
+lbl.style.color=color;
 
-  if(isGreen){
-    lbl.textContent='READY TO TRAIN';
-    rec.textContent='Recovery is solid. Push hard on your AMRAP sets today — this is a good day to chase PRs.';
-  } else if(isYellow){
-    lbl.textContent='TRAIN WITH CAUTION';
-    rec.textContent='Recovery is moderate. Complete your prescribed sets but back off on AMRAP — stop 2–3 reps short. Prioritize sleep tonight.';
-  } else {
-    lbl.textContent='CONSIDER RECOVERY';
-    rec.textContent='Recovery is low. Consider a deload, active recovery, or rest day. If you do train, keep intensity at 70–75% and skip AMRAP.';
-  }
+if(isGreen){
+lbl.textContent=‘READY TO TRAIN’;
+rec.textContent=‘Recovery is solid. Push hard on your AMRAP sets today — this is a good day to chase PRs.’;
+} else if(isYellow){
+lbl.textContent=‘TRAIN WITH CAUTION’;
+rec.textContent=‘Recovery is moderate. Complete your prescribed sets but back off on AMRAP — stop 2–3 reps short. Prioritize sleep tonight.’;
+} else {
+lbl.textContent=‘CONSIDER RECOVERY’;
+rec.textContent=‘Recovery is low. Consider a deload, active recovery, or rest day. If you do train, keep intensity at 70–75% and skip AMRAP.’;
+}
 
-  // Breakdown
-  const bd=document.getElementById('readiness-breakdown');
-  bd.style.display='block';
-  const labels={hrv:'HRV',rhr:'Rest HR',sleep:'Sleep',energy:'Energy',soreness:'Soreness',stress:'Stress'};
-  const scores=m.scores||{};
-  document.getElementById('breakdown-content').innerHTML=
-    Object.entries(labels).map(([k,l])=>{
-      if(scores[k]===undefined)return'';
-      const v=scores[k];
-      const c=v>=70?'var(--green)':v>=45?'var(--orange)':'var(--red)';
-      return `<div class="bk-row">
-        <span class="bk-label">${l}</span>
-        <div class="bk-bar-w"><div class="bk-bar" style="width:${v}%;background:${c};"></div></div>
-        <span class="bk-val" style="color:${c}">${v}</span>
-      </div>`;
-    }).join('');
+// Breakdown
+const bd=document.getElementById(‘readiness-breakdown’);
+bd.style.display=‘block’;
+const labels={hrv:‘HRV’,rhr:‘Rest HR’,sleep:‘Sleep’,energy:‘Energy’,soreness:‘Soreness’,stress:‘Stress’};
+const scores=m.scores||{};
+document.getElementById(‘breakdown-content’).innerHTML=
+Object.entries(labels).map(([k,l])=>{
+if(scores[k]===undefined)return’’;
+const v=scores[k];
+const c=v>=70?‘var(–green)’:v>=45?‘var(–orange)’:‘var(–red)’;
+return `<div class="bk-row"> <span class="bk-label">${l}</span> <div class="bk-bar-w"><div class="bk-bar" style="width:${v}%;background:${c};"></div></div> <span class="bk-val" style="color:${c}">${v}</span> </div>`;
+}).join(’’);
 
-  document.getElementById('training-rec-box').innerHTML=`
-    <div class="rec-box" style="background:${isGreen?'rgba(74,222,128,0.1)':isYellow?'rgba(251,146,60,0.1)':'rgba(239,68,68,0.1)'};border:1px solid ${color}44;">
-      <div class="rec-icon">${isGreen?'🟢':isYellow?'🟡':'🔴'}</div>
-      <div class="rec-title" style="color:${color}">${lbl.textContent}</div>
-      <div class="rec-detail">${rec.textContent}</div>
-    </div>`;
+document.getElementById(‘training-rec-box’).innerHTML=` <div class="rec-box" style="background:${isGreen?'rgba(74,222,128,0.1)':isYellow?'rgba(251,146,60,0.1)':'rgba(239,68,68,0.1)'};border:1px solid ${color}44;"> <div class="rec-icon">${isGreen?'🟢':isYellow?'🟡':'🔴'}</div> <div class="rec-title" style="color:${color}">${lbl.textContent}</div> <div class="rec-detail">${rec.textContent}</div> </div>`;
 }
 
 function renderMetricHistory(){
-  const hist=(S.metricHistory||[]).slice(0,7);
-  const card=document.getElementById('metric-history-card');
-  if(!hist.length){if(card)card.style.display='none';return;}
-  if(card)card.style.display='block';
-  const el=document.getElementById('metric-trend');if(!el)return;
-  el.innerHTML=hist.map(d=>{
-    const c=d.score>=70?'var(--green)':d.score>=45?'var(--orange)':'var(--red)';
-    const dStr=new Date(d.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-      <span style="font-size:12px;color:var(--slate);">${dStr}</span>
-      <div style="display:flex;gap:6px;align-items:center;">
-        ${d.hrv?`<span style="font-size:11px;color:#93c5fd;">HRV ${d.hrv}ms</span>`:''}
-        ${d.sleep?`<span style="font-size:11px;color:var(--slate);">${d.sleep}h</span>`:''}
-        <span style="font-family:'Oswald',sans-serif;font-size:16px;color:${c};min-width:30px;text-align:right;">${d.score??'—'}</span>
-      </div>
-    </div>`;
-  }).join('');
+const hist=(S.metricHistory||[]).slice(0,7);
+const card=document.getElementById(‘metric-history-card’);
+if(!hist.length){if(card)card.style.display=‘none’;return;}
+if(card)card.style.display=‘block’;
+const el=document.getElementById(‘metric-trend’);if(!el)return;
+el.innerHTML=hist.map(d=>{
+const c=d.score>=70?‘var(–green)’:d.score>=45?‘var(–orange)’:‘var(–red)’;
+const dStr=new Date(d.date).toLocaleDateString(‘en-US’,{weekday:‘short’,month:‘short’,day:‘numeric’});
+return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);"> <span style="font-size:12px;color:var(--slate);">${dStr}</span> <div style="display:flex;gap:6px;align-items:center;"> ${d.hrv?`<span style="font-size:11px;color:#93c5fd;">HRV ${d.hrv}ms</span>`:''} ${d.sleep?`<span style="font-size:11px;color:var(--slate);">${d.sleep}h</span>`:''} <span style="font-family:'Oswald',sans-serif;font-size:16px;color:${c};min-width:30px;text-align:right;">${d.score??'—'}</span> </div> </div>`;
+}).join(’’);
 }
-
 
 // ============ SESSION CLOCK ============
 let _clockInterval=null;
 function startSessionClock(){
-  const el=document.getElementById('sess-clock');
-  const timeEl=document.getElementById('sess-clock-time');
-  if(!el||!timeEl)return;
-  el.classList.add('active');
-  if(_clockInterval)clearInterval(_clockInterval);
-  _clockInterval=setInterval(()=>{
-    if(!S.session){stopSessionClock();return;}
-    const elapsed=Math.floor((Date.now()-(S.session.startTime||Date.now()))/1000);
-    const m=Math.floor(elapsed/60),s=elapsed%60;
-    timeEl.textContent=`${m}:${String(s).padStart(2,'0')}`;
-  },1000);
+const el=document.getElementById(‘sess-clock’);
+const timeEl=document.getElementById(‘sess-clock-time’);
+if(!el||!timeEl)return;
+el.classList.add(‘active’);
+if(_clockInterval)clearInterval(_clockInterval);
+_clockInterval=setInterval(()=>{
+if(!S.session){stopSessionClock();return;}
+const elapsed=Math.floor((Date.now()-(S.session.startTime||Date.now()))/1000);
+const m=Math.floor(elapsed/60),s=elapsed%60;
+timeEl.textContent=`${m}:${String(s).padStart(2,'0')}`;
+},1000);
 }
 function stopSessionClock(){
-  const el=document.getElementById('sess-clock');
-  if(el)el.classList.remove('active');
-  if(_clockInterval){clearInterval(_clockInterval);_clockInterval=null;}
+const el=document.getElementById(‘sess-clock’);
+if(el)el.classList.remove(‘active’);
+if(_clockInterval){clearInterval(_clockInterval);_clockInterval=null;}
 }
 
 // ============ REST TIMER ============
@@ -2411,81 +2505,81 @@ let _restRemaining=0;
 const RT_CIRCUMFERENCE=220;
 
 function startRestTimer(mins){
-  const secs=Math.round((mins||3)*60);
-  _restTotal=secs;
-  _restRemaining=secs;
-  document.getElementById('rest-timer').style.display='block';
-  document.getElementById('done-main-btn').style.display='none';
-  updateRestDisplay();
-  if(_restTimer)clearInterval(_restTimer);
-  _restTimer=setInterval(()=>{
-    _restRemaining--;
-    updateRestDisplay();
-    if(_restRemaining<=0){
-      clearInterval(_restTimer);_restTimer=null;
-      onRestComplete();
-    }
-  },1000);
+const secs=Math.round((mins||3)*60);
+_restTotal=secs;
+_restRemaining=secs;
+document.getElementById(‘rest-timer’).style.display=‘block’;
+document.getElementById(‘done-main-btn’).style.display=‘none’;
+updateRestDisplay();
+if(_restTimer)clearInterval(_restTimer);
+_restTimer=setInterval(()=>{
+_restRemaining–;
+updateRestDisplay();
+if(_restRemaining<=0){
+clearInterval(_restTimer);_restTimer=null;
+onRestComplete();
+}
+},1000);
 }
 
 function updateRestDisplay(){
-  const m=Math.floor(_restRemaining/60),s=_restRemaining%60;
-  document.getElementById('rt-num').textContent=_restRemaining>0?`${m}:${String(s).padStart(2,'0')}`:'GO!';
-  const fill=document.getElementById('rt-fill');
-  const msg=document.getElementById('rt-msg');
-  const progress=_restRemaining/_restTotal;
-  const offset=RT_CIRCUMFERENCE*(1-progress);
-  fill.style.strokeDashoffset=offset;
-  if(_restRemaining<=10&&_restRemaining>0){
-    fill.style.stroke='var(--orange)';
-    msg.textContent='ALMOST...';
-    msg.className='rt-msg';
-  } else if(_restRemaining<=0){
-    fill.style.stroke='var(--green)';
-    fill.classList.add('done');
-    msg.textContent='GO!';
-    msg.className='rt-msg go';
-  } else {
-    fill.style.stroke='var(--blue)';
-    fill.classList.remove('done');
-    msg.textContent='REST UP';
-    msg.className='rt-msg';
-  }
+const m=Math.floor(_restRemaining/60),s=_restRemaining%60;
+document.getElementById(‘rt-num’).textContent=_restRemaining>0?`${m}:${String(s).padStart(2,'0')}`:‘GO!’;
+const fill=document.getElementById(‘rt-fill’);
+const msg=document.getElementById(‘rt-msg’);
+const progress=_restRemaining/_restTotal;
+const offset=RT_CIRCUMFERENCE*(1-progress);
+fill.style.strokeDashoffset=offset;
+if(_restRemaining<=10&&_restRemaining>0){
+fill.style.stroke=‘var(–orange)’;
+msg.textContent=‘ALMOST…’;
+msg.className=‘rt-msg’;
+} else if(_restRemaining<=0){
+fill.style.stroke=‘var(–green)’;
+fill.classList.add(‘done’);
+msg.textContent=‘GO!’;
+msg.className=‘rt-msg go’;
+} else {
+fill.style.stroke=‘var(–blue)’;
+fill.classList.remove(‘done’);
+msg.textContent=‘REST UP’;
+msg.className=‘rt-msg’;
+}
 }
 
 function onRestComplete(){
-  // Subtle vibration if available
-  if(navigator.vibrate)navigator.vibrate([200,100,200]);
-  // After 2s auto-hide timer and show next set
-  setTimeout(()=>{
-    document.getElementById('rest-timer').style.display='none';
-    renderMainLiftUI();
-  },2000);
+// Subtle vibration if available
+if(navigator.vibrate)navigator.vibrate([200,100,200]);
+// After 2s auto-hide timer and show next set
+setTimeout(()=>{
+document.getElementById(‘rest-timer’).style.display=‘none’;
+renderMainLiftUI();
+},2000);
 }
 
 function skipRest(){
-  if(_restTimer){clearInterval(_restTimer);_restTimer=null;}
-  document.getElementById('rest-timer').style.display='none';
-  renderMainLiftUI();
+if(_restTimer){clearInterval(_restTimer);_restTimer=null;}
+document.getElementById(‘rest-timer’).style.display=‘none’;
+renderMainLiftUI();
 }
 
 function addRestTime(seconds){
-  _restRemaining+=seconds;
-  _restTotal+=seconds;
-  updateRestDisplay();
+_restRemaining+=seconds;
+_restTotal+=seconds;
+updateRestDisplay();
 }
 
 // ============ AMRAP COACHING ============
 function showAmrapCoach(week,reps){
-  const box=document.getElementById('amrap-coach');
-  const txt=document.getElementById('amrap-coach-text');
-  if(!box||!txt)return;
-  let msg='';
-  if(week===1)msg=`Target <strong>${reps>5?reps:reps+3}+ reps</strong>. Week 1 — push hard, 1–2 reps in reserve.`;
-  else if(week===2)msg=`Target <strong>${reps>3?reps:reps+2}+ reps</strong>. Week 2 — solid effort, stop just before failure.`;
-  else if(week===3)msg=`This is your <strong>max effort set</strong>. Week 3 — go for a PR if you feel it.`;
-  box.style.display=msg?'block':'none';
-  txt.innerHTML=msg;
+const box=document.getElementById(‘amrap-coach’);
+const txt=document.getElementById(‘amrap-coach-text’);
+if(!box||!txt)return;
+let msg=’’;
+if(week===1)msg=`Target <strong>${reps>5?reps:reps+3}+ reps</strong>. Week 1 — push hard, 1–2 reps in reserve.`;
+else if(week===2)msg=`Target <strong>${reps>3?reps:reps+2}+ reps</strong>. Week 2 — solid effort, stop just before failure.`;
+else if(week===3)msg=`This is your <strong>max effort set</strong>. Week 3 — go for a PR if you feel it.`;
+box.style.display=msg?‘block’:‘none’;
+txt.innerHTML=msg;
 }
 
 init();
