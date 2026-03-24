@@ -5,7 +5,24 @@
   --dg:#0a3d1f;--mg:#15803d;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Rajdhani',sans-serif;background:linear-gradient(160deg,var(--mg) 0%,var(--dg) 100%);min-height:100vh;color:white;margin:0;padding-bottom:80px;}
+
+/* === FIX: Background added to HTML and fixed to the viewport on Body === */
+html {
+  height: 100%;
+  background-color: var(--dg); 
+}
+body {
+  font-family: 'Rajdhani', sans-serif;
+  background-image: linear-gradient(160deg, var(--mg) 0%, var(--dg) 100%);
+  background-attachment: fixed; /* Keeps gradient full-screen on scroll */
+  background-size: cover;
+  background-repeat: no-repeat;
+  min-height: 100%;
+  color: white;
+  margin: 0;
+  padding-bottom: 80px;
+}
+
 .hdr{background:rgba(0,0,0,0.4);padding:14px 16px 10px;text-align:center;border-bottom:2px solid var(--gold);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
 .hdr h1{font-family:'Oswald',sans-serif;font-size:20px;color:var(--gold);letter-spacing:3px;}
 .hdr .sub{font-size:10px;color:var(--slate);letter-spacing:2px;margin-top:1px;}
