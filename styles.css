@@ -368,3 +368,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 .amrap-box .ab-title{font-family:'Oswald',sans-serif;font-size:11px;color:#93c5fd;letter-spacing:2px;margin-bottom:4px;}
 .amrap-box .ab-text{font-size:12px;color:var(--metallicblue);line-height:1.6;}
 .amrap-box strong{color:white;}
+
+/* ACTIVE LOGGER INJECTED INPUTS */
+.acc-log-row { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+.alr-name { font-family: 'Oswald', sans-serif; color: #93c5fd; font-size: 14px; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
+.alr-pres { color: var(--metallicblue); font-family: 'Rajdhani', sans-serif; font-size: 11px; letter-spacing: 0; text-transform: none; margin-left: 6px; }
+.alr-inputs { display: flex; gap: 10px; align-items: center; }
+.alr-inputs label { font-size: 10px; color: var(--slate); letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.alr-inputs input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; color: white; font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; padding: 8px; width: 100%; text-align: center; }
+.alr-inputs input:focus { outline: none; border-color: var(--blue); }
