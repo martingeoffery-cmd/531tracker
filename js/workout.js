@@ -1,7 +1,5 @@
-// ============ WORKOUT LOGIC ============
+// ============ WORKOUT ENGINE ============
 let currentCat = 'Push';
-let exModalTarget = 'strength'; 
-let coulsonSetData = {}; 
 
 // Setup Screen
 function setSessType(type, el) {
@@ -62,10 +60,7 @@ function renderScheduleUI() {
   syncLiftFromSchedule();
 }
 
-function setScheduleDay(i) {
-  S.scheduleDay = i; save();
-  renderScheduleUI();
-}
+function setScheduleDay(i) { S.scheduleDay = i; save(); renderScheduleUI(); }
 
 function syncLiftFromSchedule() {
   const sched = SCHEDULES[S.schedule];
@@ -101,9 +96,7 @@ function renderSchedulePrescrip(day) {
       <table class="stbl"><thead><tr><th>SET</th><th>%TM</th><th>WEIGHT</th><th>REPS</th></tr></thead><tbody>${
         scheme.map((s, i) => { const wt = r5(tm2 * s.p); const rep = s.amrap ? `<span class="sr">${s.r}</span> <span class="amtag">AMRAP</span>` : `<span class="sr">${s.r}</span>`; return `<tr><td class="sp2">Set ${i + 1}</td><td class="sp2">${Math.round(s.p * 100)}%</td><td class="sw">${wt}</td><td>${rep}</td></tr>`; }).join('')
       }</tbody></table>`;
-  } else if(multi) {
-    multi.style.display = 'none';
-  }
+  } else if(multi) multi.style.display = 'none';
 }
 
 function updateSchedDayNote() {
@@ -116,33 +109,73 @@ function updateSchedDayNote() {
   note.innerHTML = `<strong style="color:white;">${day.subtitle}</strong>${isMulti ? ` <span class="ml-badge">2 lifts back-to-back</span>` : ''}<br>${sched.source}`;
 }
 
+// ============ ENGINE CORE ============
+
 function startSession() {
-  coulsonSetData = {};
-  if(S.sessType === 'mrut') {
-    S.session = { type: 'mrut', mrutNum: S.mrutNum, extras: [], startTime: Date.now() };
-    showPhase('1');
-  } else {
+  // Build Unified Workout Plan
+  const blocks = [];
+  
+  if (S.sessType === 'strength') {
     const sched = SCHEDULES[S.schedule];
-    let liftQueue = [S.lift];
-    let coulsonKey = S.lift;
-    if(sched && sched.days && S.schedule !== 'custom') {
-      const day = sched.days[S.scheduleDay] || sched.days[0];
-      if(day) { liftQueue = [...day.lifts]; coulsonKey = day.coulson; }
-    }
-    const primaryLift = liftQueue[0];
-    S.session = {
-      type: 'strength',
-      lift: primaryLift, liftLabel: LL[primaryLift],
-      liftQueue, liftQueueIdx: 0,
-      completedLifts: [],
-      coulsonKey,
-      week: S.week, cycle: S.cycle,
-      weekLabel: S.week === 4 ? 'Deload Week' : `Week ${S.week}`,
-      tm: S.tms[primaryLift], scheme: SCHEMES[S.week],
-      currentSetIdx: 0, mainSets: [], extras: [], startTime: Date.now()
-    };
-    showPhase('1');
+    const lifts = (sched && S.schedule !== 'custom') ? sched.days[S.scheduleDay].lifts : [S.lift];
+    
+    // Generate Main Lift Blocks
+    lifts.forEach(liftKey => {
+      blocks.push({
+        id: `main-${liftKey}-${Date.now()}`,
+        type: 'main',
+        lift: liftKey,
+        label: `${LL[liftKey]} 5/3/1`,
+        desc: `Cycle ${S.cycle} · Week ${S.week}`,
+        tm: S.tms[liftKey],
+        scheme: SCHEMES[S.week],
+        totalRounds: SCHEMES[S.week].length,
+        logged: []
+      });
+    });
+
+    // Generate Accessory Blocks
+    const coulsonKey = (sched && S.schedule !== 'custom') ? sched.days[S.scheduleDay].coulson : S.lift;
+    const plan = COULSON[coulsonKey] || COULSON.squat;
+    plan.groups.forEach((g, idx) => {
+      blocks.push({
+        id: `acc-${idx}-${Date.now()}`,
+        type: 'accessory',
+        groupType: g.type,
+        label: g.label,
+        desc: '',
+        items: JSON.parse(JSON.stringify(g.items)),
+        totalRounds: g.items[0]?.sets || 3,
+        defaultRest: parseInt(g.items[g.items.length-1].rest) || 60,
+        logged: []
+      });
+    });
+
+  } else if (S.sessType === 'mrut') {
+    const plan = S.mrutNum === 2 ? COULSON.mrut2 : COULSON.mrut4;
+    plan.groups.forEach((g, idx) => {
+      blocks.push({
+        id: `mrut-${idx}-${Date.now()}`,
+        type: 'accessory',
+        groupType: g.type,
+        label: g.label,
+        desc: '',
+        items: JSON.parse(JSON.stringify(g.items)),
+        totalRounds: g.items[0]?.sets || 4,
+        defaultRest: parseInt(g.items[g.items.length-1].rest) || 60,
+        logged: []
+      });
+    });
   }
+
+  S.session = {
+    sessType: S.sessType,
+    blocks: blocks,
+    currentBlockIdx: 0,
+    startTime: Date.now()
+  };
+
+  showPhase('1');
   startSessionClock();
   renderWarmupChecklist();
 }
@@ -172,313 +205,259 @@ function renderWarmupChecklist() {
   btn.style.pointerEvents = (done === WARMUP.length) ? 'auto' : 'none';
 }
 function toggleWU(i) { S.session.warmupChecks[i] = !S.session.warmupChecks[i]; renderWarmupChecklist(); }
-function warmupDone() { S.session.type === 'mrut' ? showMRUTSession() : (showPhase('2'), renderMainLiftUI()); }
-function warmupSkip() { S.session.type === 'mrut' ? showMRUTSession() : (showPhase('2'), renderMainLiftUI()); }
+function warmupDone() { showPhase('2'); renderActiveBlock(); }
+function warmupSkip() { showPhase('2'); renderActiveBlock(); }
 
-// Main Lift
-function renderMainLiftUI() {
-  const sess = S.session;
-  const n = sess.scheme.length;
-  document.getElementById('set-dots').innerHTML = Array.from({length: n}, (_, i) => `<div class="dot ${i < sess.currentSetIdx ? 'done' : i === sess.currentSetIdx ? 'cur' : ''}"></div>`).join('');
-  
-  const lq = sess.liftQueue || [sess.lift];
-  const lqIdx = sess.liftQueueIdx || 0;
-  const lqBar = lq.length > 1 ? `<div class="lq-bar">${lq.map((lk, i) => {
-    const cls = i < lqIdx ? 'done' : i === lqIdx ? 'cur' : 'next';
-    return `<div class="lq-step"><div class="lq-dot ${cls}">${i < lqIdx ? '✓' : (i + 1)}</div><span class="lq-label ${cls === 'cur' ? 'cur' : ''}">${LL[lk]}</span></div>${i < lq.length - 1 ? '<span class="lq-arrow">→</span>' : ''}`;
-  }).join('')}</div>` : '';
-  
-  document.getElementById('ph2-title').innerHTML = `${lqBar}${sess.liftLabel} — ${sess.weekLabel} <span class="cbadge">CYCLE ${sess.cycle}</span>`;
-  
-  if(sess.currentSetIdx >= n) {
+// ============ UNIFIED LOGGER ============
+
+function renderActiveBlock() {
+  const block = S.session.blocks[S.session.currentBlockIdx];
+  const currentSet = block.logged.length;
+  const isDone = currentSet >= block.totalRounds;
+
+  document.getElementById('active-block-title').innerHTML = block.label;
+  document.getElementById('active-block-desc').innerHTML = block.desc || block.groupType || '';
+
+  // Render Dots
+  document.getElementById('set-dots').innerHTML = Array.from({length: block.totalRounds}, (_, i) => `<div class="dot ${i < currentSet ? 'done' : i === currentSet ? 'cur' : ''}"></div>`).join('');
+
+  if(isDone) {
     document.getElementById('set-logger').style.display = 'none';
     document.getElementById('done-main-btn').style.display = 'block';
-    renderLoggedSets(); return;
+    renderLoggedSets();
+    return;
   }
-  
+
   document.getElementById('set-logger').style.display = 'block';
   document.getElementById('done-main-btn').style.display = 'none';
-  const s = sess.scheme[sess.currentSetIdx];
-  const pw = r5(sess.tm * s.p);
-  document.getElementById('set-counter').textContent = `SET ${sess.currentSetIdx + 1} OF ${n}`;
-  document.getElementById('set-prescrip').innerHTML = `Prescribed: <span>${pw} lbs × ${s.amrap ? s.r + ' (AMRAP)' : s.r}</span>`;
-  document.getElementById('inp-w').value = pw;
-  document.getElementById('inp-r').value = typeof s.r === 'number' ? s.r : '';
-  document.getElementById('inp-rest').value = 3;
-  document.getElementById('rpe-slider').value = 6;
-  updateRPE(6);
-  document.getElementById('e1rm-live').style.display = 'none';
+  document.getElementById('set-counter').textContent = `ROUND ${currentSet + 1} OF ${block.totalRounds}`;
   document.getElementById('rest-timer').style.display = 'none';
+
+  const inputsContainer = document.getElementById('dynamic-inputs');
   
-  if(s.amrap) { showAmrapCoach(sess.week, sess.mainSets.length ? sess.mainSets[sess.mainSets.length - 1].reps : 5); }
-  else { const b = document.getElementById('amrap-coach'); if(b) b.style.display = 'none'; }
+  if (block.type === 'main') {
+    // MAIN LIFT UI
+    const s = block.scheme[currentSet];
+    const pw = r5(block.tm * s.p);
+    
+    document.getElementById('set-prescrip').style.display = 'block';
+    document.getElementById('set-prescrip').innerHTML = `Prescribed: <span>${pw} lbs × ${s.amrap ? s.r + ' (AMRAP)' : s.r}</span>`;
+    
+    if(s.amrap) { 
+      document.getElementById('amrap-coach').style.display = 'block';
+      let prevReps = block.logged.length ? block.logged[block.logged.length - 1].reps : 5;
+      document.getElementById('amrap-coach-text').innerHTML = `Target <strong>${prevReps > 5 ? prevReps : prevReps + 2}+ reps</strong>. Go for max quality reps.`;
+    } else { 
+      document.getElementById('amrap-coach').style.display = 'none'; 
+    }
+
+    inputsContainer.innerHTML = `
+      <div class="si-grid">
+        <div class="si-box"><label>WEIGHT (lbs)</label><input type="number" class="wi" id="inp-main-w" inputmode="decimal" value="${pw}"></div>
+        <div class="si-box"><label>REPS</label><input type="number" class="ri" id="inp-main-r" inputmode="decimal" value="${typeof s.r === 'number' ? s.r : ''}"></div>
+        <div class="si-box"><label>REST (min)</label><input type="number" id="inp-main-rest" inputmode="decimal" value="3"></div>
+      </div>
+      <div class="rpe-w">
+        <div class="rpe-lr"><span class="rpe-t">RPE (1–10)</span><span class="rpe-v" id="rpe-disp" style="color:var(--green)">6</span></div>
+        <input type="range" min="1" max="10" value="6" id="inp-main-rpe" oninput="updateRPE(this.value)">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--slate);margin-top:3px;"><span>1 Easy</span><span>5 Moderate</span><span>10 Max</span></div>
+      </div>
+      <div class="e1rm-b" id="e1rm-live" style="display:none;"><div class="el">Estimated 1RM this set</div><div class="ev" id="e1rm-val">—</div></div>
+    `;
+
+    ['inp-main-w', 'inp-main-r'].forEach(id => {
+      document.getElementById(id).oninput = () => {
+        const w = parseFloat(document.getElementById('inp-main-w').value);
+        const reps = parseInt(document.getElementById('inp-main-r').value);
+        if(w && reps && reps > 0) {
+          const e = reps === 1 ? w : r5(w * (1 + reps / 30));
+          document.getElementById('e1rm-val').textContent = e + ' lbs';
+          document.getElementById('e1rm-live').style.display = 'block';
+        }
+      };
+    });
+
+  } else if (block.type === 'accessory') {
+    // ACCESSORY UI
+    document.getElementById('set-prescrip').style.display = 'none';
+    document.getElementById('amrap-coach').style.display = 'none';
+
+    let html = '';
+    block.items.forEach((item, idx) => {
+      const prevW = block.logged.length > 0 ? block.logged[block.logged.length-1].items[idx].w : (item.w || '');
+      const prevR = block.logged.length > 0 ? block.logged[block.logged.length-1].items[idx].r : (item.r || '');
+      html += `
+        <div class="acc-log-row">
+          <div class="alr-name">${item.name} <span class="alr-pres">(${item.pres})</span></div>
+          <div class="alr-inputs">
+            <div style="flex:1"><label>WEIGHT / BW</label><input type="text" class="wi acc-w" data-idx="${idx}" value="${prevW}" placeholder="lbs"></div>
+            <span style="color:var(--slate); padding-top:14px;">×</span>
+            <div style="flex:1"><label>REPS / TIME</label><input type="text" class="ri acc-r" data-idx="${idx}" value="${prevR}" placeholder="reps"></div>
+          </div>
+        </div>
+      `;
+    });
+    html += `<div class="si-box" style="margin-top:12px;"><label>REST (sec)</label><input type="number" id="inp-acc-rest" value="${block.defaultRest}"></div>`;
+    inputsContainer.innerHTML = html;
+  }
   
-  ['inp-w', 'inp-r'].forEach(id => {
-    document.getElementById(id).oninput = () => {
-      const w = parseFloat(document.getElementById('inp-w').value);
-      const reps = parseInt(document.getElementById('inp-r').value);
-      if(w && reps && reps > 0) {
-        const e = reps === 1 ? w : r5(w * (1 + reps / 30));
-        document.getElementById('e1rm-val').textContent = e + ' lbs';
-        document.getElementById('e1rm-live').style.display = 'block';
-      }
-    };
-  });
   renderLoggedSets();
 }
 
 function updateRPE(v) {
   const el = document.getElementById('rpe-disp');
-  el.textContent = v;
-  el.style.color = v <= 4 ? 'var(--green)' : v <= 7 ? 'var(--orange)' : 'var(--red)';
+  if(el) {
+    el.textContent = v;
+    el.style.color = v <= 4 ? 'var(--green)' : v <= 7 ? 'var(--orange)' : 'var(--red)';
+  }
 }
 
-function showAmrapCoach(week, reps) {
-  const box = document.getElementById('amrap-coach');
-  const txt = document.getElementById('amrap-coach-text');
-  if(!box || !txt) return;
-  let msg = '';
-  if(week === 1) msg = `Target <strong>${reps > 5 ? reps : reps + 3}+ reps</strong>. Week 1 — push hard, 1–2 reps in reserve.`;
-  else if(week === 2) msg = `Target <strong>${reps > 3 ? reps : reps + 2}+ reps</strong>. Week 2 — solid effort, stop just before failure.`;
-  else if(week === 3) msg = `This is your <strong>max effort set</strong>. Week 3 — go for a PR if you feel it.`;
-  box.style.display = msg ? 'block' : 'none';
-  txt.innerHTML = msg;
-}
+function logActiveBlock() {
+  const block = S.session.blocks[S.session.currentBlockIdx];
+  const currentSet = block.logged.length;
+  let restTime = 60;
 
-function logSet() {
-  const w = parseFloat(document.getElementById('inp-w').value);
-  const reps = parseInt(document.getElementById('inp-r').value);
-  const rpe = parseInt(document.getElementById('rpe-slider').value);
-  const rest = parseFloat(document.getElementById('inp-rest').value) || 3;
-  if(!w || !reps) { toast('Enter weight and reps!'); return; }
+  if (block.type === 'main') {
+    const w = parseFloat(document.getElementById('inp-main-w').value);
+    const r = parseInt(document.getElementById('inp-main-r').value);
+    const rpe = parseInt(document.getElementById('inp-main-rpe').value);
+    restTime = (parseFloat(document.getElementById('inp-main-rest').value) || 3) * 60;
+    
+    if(!w || !r) { toast('Enter weight and reps!'); return; }
+    const s = block.scheme[currentSet];
+    const e1rm = r === 1 ? w : r5(w * (1 + r / 30));
+    
+    block.logged.push({ w, r, rpe, e1rm, prescribed_w: r5(block.tm * s.p), prescribed_r: s.r, amrap: s.amrap || false });
   
-  const sess = S.session;
-  const s = sess.scheme[sess.currentSetIdx];
-  const e1rm = reps === 1 ? w : r5(w * (1 + reps / 30));
-  
-  sess.mainSets.push({ weight: w, reps, rpe, rest, e1rm, prescribed_w: r5(sess.tm * s.p), prescribed_r: s.r, pct: Math.round(s.p * 100), amrap: s.amrap || false });
-  sess.currentSetIdx++;
+  } else if (block.type === 'accessory') {
+    const ws = document.querySelectorAll('.acc-w');
+    const rs = document.querySelectorAll('.acc-r');
+    restTime = parseInt(document.getElementById('inp-acc-rest').value) || 60;
+    
+    const roundItems = [];
+    let isValid = true;
+    block.items.forEach((item, idx) => {
+      const wVal = ws[idx].value.trim();
+      const rVal = rs[idx].value.trim();
+      if(!wVal || !rVal) isValid = false;
+      roundItems.push({ w: wVal, r: rVal });
+    });
+
+    if(!isValid) { toast('Fill all fields for this round!'); return; }
+    block.logged.push({ items: roundItems, rest: restTime });
+  }
+
+  save();
   renderLoggedSets();
-  
-  if(sess.currentSetIdx < sess.scheme.length) toast(`Set ${sess.currentSetIdx} logged ✓`);
-  document.getElementById('set-logger').style.display = 'none';
-  startRestTimer(rest);
+
+  if(block.logged.length < block.totalRounds) {
+    toast(`Round ${block.logged.length} logged ✓`);
+    document.getElementById('set-logger').style.display = 'none';
+    startRestTimer(restTime / 60); // timer uses mins, passing secs/60 handles it
+  } else {
+    document.getElementById('set-logger').style.display = 'none';
+    document.getElementById('set-dots').innerHTML = Array.from({length: block.totalRounds}, () => `<div class="dot done"></div>`).join('');
+    document.getElementById('done-main-btn').style.display = 'block';
+    
+    // Optional: Pop timer even after last set of block to rest before next block
+    startRestTimer(restTime / 60);
+  }
 }
 
 function renderLoggedSets() {
-  const sess = S.session;
+  const block = S.session.blocks[S.session.currentBlockIdx];
   const wrap = document.getElementById('logged-sets-wrap');
-  if(!sess.mainSets.length) { wrap.innerHTML = ''; return; }
+  if(!block.logged.length) { wrap.innerHTML = ''; return; }
   
-  const liftName = sess.liftLabel;
-  const histBest = S.log.filter(e => e.lift === liftName && e.bestE1rm).reduce((b, e) => Math.max(b, e.bestE1rm), 0);
-  const sessionBest = sess.mainSets.reduce((b, s) => Math.max(b, s.e1rm), 0);
+  let html = `<div style="font-size:10px;color:var(--slate);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">Logged Rounds</div>`;
   
-  wrap.innerHTML = `<div style="font-size:10px;color:var(--slate);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">Logged Sets</div>` +
-  sess.mainSets.map((s, i) => {
-    const rc = s.rpe <= 4 ? 'var(--green)' : s.rpe <= 7 ? 'var(--orange)' : 'var(--red)';
-    const diff = s.weight !== s.prescribed_w ? ` <span style="color:${s.weight > s.prescribed_w ? 'var(--green)' : '#f87171'};font-size:10px;">(${s.weight > s.prescribed_w ? '+' : ''}${s.weight - s.prescribed_w})</span>` : '';
-    const isPR = s.e1rm > 0 && s.e1rm >= sessionBest && s.e1rm > histBest;
-    const prBadge = isPR ? `<span class="pr-badge">🏆 PR</span>` : '';
-    return `<div class="ls"><span class="ls-n">${i + 1}</span><span class="ls-d"><strong style="color:var(--green)">${s.weight}lbs</strong>${diff} × <strong style="color:var(--orange)">${s.reps}</strong>${prBadge}</span><span class="ls-e">e1RM ${s.e1rm}</span><span class="ls-r" style="background:${rc}22;color:${rc};border:1px solid ${rc}44;">RPE ${s.rpe}</span></div>`;
-  }).join('');
+  if (block.type === 'main') {
+    html += block.logged.map((s, i) => {
+      const rc = s.rpe <= 4 ? 'var(--green)' : s.rpe <= 7 ? 'var(--orange)' : 'var(--red)';
+      const diff = s.w !== s.prescribed_w ? ` <span style="color:${s.w > s.prescribed_w ? 'var(--green)' : '#f87171'};font-size:10px;">(${s.w > s.prescribed_w ? '+' : ''}${s.w - s.prescribed_w})</span>` : '';
+      return `<div class="ls"><span class="ls-n">${i + 1}</span><span class="ls-d"><strong style="color:var(--green)">${s.w}lbs</strong>${diff} × <strong style="color:var(--orange)">${s.r}</strong></span><span class="ls-e">e1RM ${s.e1rm}</span><span class="ls-r" style="background:${rc}22;color:${rc};border:1px solid ${rc}44;">RPE ${s.rpe}</span></div>`;
+    }).join('');
+  } else if (block.type === 'accessory') {
+    html += block.logged.map((rnd, i) => {
+      const itemsStr = rnd.items.map(it => `${it.w} × ${it.r}`).join(' &nbsp;|&nbsp; ');
+      return `<div class="ls"><span class="ls-n">${i + 1}</span><span class="ls-d" style="color:var(--slate)">${itemsStr}</span></div>`;
+    }).join('');
+  }
+
+  wrap.innerHTML = html;
 }
 
-function doneMainLift() {
-  const sess = S.session;
-  sess.completedLifts.push({ lift: sess.lift, liftLabel: sess.liftLabel, tm: sess.tm, mainSets: [...sess.mainSets] });
-  if(sess.liftQueueIdx < sess.liftQueue.length - 1) {
-    showLiftTransition();
+// ============ BLOCK TRANSITIONS ============
+
+function finishActiveBlock() {
+  save();
+  renderTransition();
+}
+
+function renderTransition() {
+  const currentBlock = S.session.blocks[S.session.currentBlockIdx];
+  const nextBlock = S.session.blocks[S.session.currentBlockIdx + 1];
+
+  document.getElementById('lt-done-label').textContent = `${currentBlock.label.toUpperCase()} COMPLETE`;
+  
+  // Calculate Stats for Completed Block
+  let statsHtml = '';
+  if (currentBlock.type === 'main') {
+    const bestE1rm = currentBlock.logged.length ? Math.max(...currentBlock.logged.map(s => s.e1rm)) : null;
+    const totalVol = currentBlock.logged.reduce((t, s) => t + s.w * s.r, 0);
+    statsHtml = (bestE1rm ? `Best e1RM: <strong style="color:#93c5fd">${bestE1rm} lbs</strong><br>` : '') +
+                (totalVol ? `Volume: <strong style="color:var(--green)">${totalVol.toLocaleString()} lbs</strong>` : '');
   } else {
-    showPhase('3'); renderCoulsonPrescribed();
+    let vol = 0;
+    currentBlock.logged.forEach(rnd => {
+      rnd.items.forEach(it => { vol += (parseFloat(it.w) || 0) * (parseInt(it.r) || 0); });
+    });
+    statsHtml = vol > 0 ? `Volume Added: <strong style="color:var(--blue)">${vol.toLocaleString()} lbs</strong>` : 'Block Completed';
   }
+  document.getElementById('lt-stats').innerHTML = statsHtml;
+
+  // Next Area logic
+  if (nextBlock) {
+    document.getElementById('trans-next-area').style.display = 'block';
+    document.getElementById('trans-finish-area').style.display = 'none';
+    document.getElementById('lt-next-name').textContent = nextBlock.label;
+  } else {
+    document.getElementById('trans-next-area').style.display = 'none';
+    document.getElementById('trans-finish-area').style.display = 'block';
+  }
+
+  showPhase('-trans');
 }
 
-function showLiftTransition() {
-  const sess = S.session;
-  const done = sess.completedLifts[sess.completedLifts.length - 1];
-  const nextLiftKey = sess.liftQueue[sess.liftQueueIdx + 1];
-  const mainSets = done.mainSets;
-  const bestE1rm = mainSets.length ? Math.max(...mainSets.map(s => s.e1rm)) : null;
-  const totalVol = mainSets.reduce((t, s) => t + s.weight * s.reps, 0);
-  
-  document.getElementById('lt-done-label').textContent = `${done.liftLabel.toUpperCase()} COMPLETE`;
-  document.getElementById('lt-stats').innerHTML =
-    (bestE1rm ? `e1RM: <strong style="color:#93c5fd">${bestE1rm} lbs</strong>&nbsp;&nbsp;` : '') +
-    (totalVol ? `Volume: <strong style="color:var(--green)">${totalVol.toLocaleString()} lbs</strong>` : '') +
-    `<br><span style="font-size:11px">Sets logged: ${mainSets.length}</span>`;
-  document.getElementById('lt-next-name').textContent = LL[nextLiftKey];
-  showPhase('2b');
-}
-
-function advanceLiftQueue() {
-  const sess = S.session;
-  sess.liftQueueIdx++;
-  const nextLiftKey = sess.liftQueue[sess.liftQueueIdx];
-  sess.lift = nextLiftKey;
-  sess.liftLabel = LL[nextLiftKey];
-  sess.tm = S.tms[nextLiftKey];
-  sess.currentSetIdx = 0;
-  sess.mainSets = [];
-  coulsonSetData = {};
+function startNextBlock() {
+  S.session.currentBlockIdx++;
+  save();
   showPhase('2');
-  renderMainLiftUI();
+  renderActiveBlock();
 }
 
-function skipToAccessories() {
-  const sess = S.session;
-  if(sess.mainSets.length) {
-    sess.completedLifts.push({ lift: sess.lift, liftLabel: sess.liftLabel, tm: sess.tm, mainSets: [...sess.mainSets] });
+function skipNextBlock() {
+  if(confirm("Skip the next block entirely?")) {
+    S.session.currentBlockIdx++;
+    save();
+    renderTransition(); // Re-render transition to check if there's another block or if we are done
   }
-  showPhase('3'); renderCoulsonPrescribed();
 }
 
-function goBackToMain() { showPhase('2'); renderMainLiftUI(); }
+function gotoFinish() {
+  showPhase('-finish');
+}
 
 function cancelSession() { 
-  S.session = null; showPhase('0'); stopSessionClock(); 
-  if(_restTimer) { clearInterval(_restTimer); _restTimer = null; } 
-  document.getElementById('rest-timer').style.display = 'none'; 
+  if(confirm("Discard this entire workout?")) {
+    S.session = null; showPhase('0'); stopSessionClock(); 
+    if(_restTimer) { clearInterval(_restTimer); _restTimer = null; } 
+    document.getElementById('rest-timer').style.display = 'none'; 
+  }
 }
 
-// Accessories
-function getCoulsonPlan() {
-  if(S.session.type === 'mrut') return S.session.mrutNum === 2 ? COULSON.mrut2 : COULSON.mrut4;
-  const key = S.session.coulsonKey || S.session.lift;
-  return COULSON[key] || COULSON.squat;
-}
-function ensureSetData(gi, ii, defaultSets, defaultReps, defaultW) {
-  const key = `${gi}-${ii}`;
-  if(!coulsonSetData[key]) coulsonSetData[key] = Array.from({ length: defaultSets }, () => ({ weight: defaultW || '', reps: defaultReps || '' }));
-  return coulsonSetData[key];
-}
-function groupClass(type) { return type === 'superset' ? 'superset' : type === 'circuit' ? 'circuit' : type === 'finisher' ? 'finisher' : ''; }
-function labelClass(type) { return type === 'superset' ? 'sup' : type === 'circuit' ? 'cir' : type === 'finisher' ? 'fin' : 'str'; }
-
-function renderCoulsonPrescribed() {
-  const plan = getCoulsonPlan();
-  if(!S.session.deletedItems) S.session.deletedItems = [];
-  document.getElementById('coulson-header').innerHTML = `<div class="ch-title">${plan.label}</div><div class="ch-sub">${plan.desc}</div>`;
-  document.getElementById('coulson-prescribed').innerHTML = plan.groups.map((g, gi) => {
-    const itemsHTML = g.items.map((item, ii) => {
-      if(S.session.deletedItems.includes(`${gi}-${ii}`)) return '';
-      const sets = ensureSetData(gi, ii, item.sets, item.reps, item.w);
-      const setsHTML = sets.map((set, si) => `
-        <div class="set-row-inp">
-          <span class="sn2">${si + 1}</span>
-          <input type="number" class="wi2" value="${set.weight}" placeholder="${item.w || 'lbs'}" inputmode="decimal" onchange="updateCoulsonSet(${gi},${ii},${si},'weight',this.value)">
-          <span class="xi">×</span>
-          <input type="number" class="ri2" value="${set.reps}" placeholder="${item.reps}" inputmode="decimal" onchange="updateCoulsonSet(${gi},${ii},${si},'reps',this.value)">
-          <button class="rm-s" onclick="removeCoulsonSet(${gi},${ii},${si})">✕</button>
-        </div>`).join('');
-      const vol = sets.reduce((t, s) => t + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0), 0);
-      const volLine = vol > 0 ? `<span class="set-vol">Vol: <strong style="color:var(--blue)">${vol.toLocaleString()} lbs</strong></span>` : '<span class="set-vol" style="color:rgba(255,255,255,0.25);">BW / Timed</span>';
-      return `<div class="ex-row">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <div class="ex-name" style="margin-bottom:0;">${item.name}</div>
-          ${g.deletable ? `<button class="btn xs red" onclick="deleteCoulsonItem(${gi},${ii})">REMOVE</button>` : ''}
-        </div>
-        <div class="ex-pres">Prescribed: <strong>${item.pres}</strong>&nbsp;&nbsp;Rest: ${item.rest}</div>
-        <div class="set-rows-wrap">${setsHTML}</div>
-        <div class="add-set-row">
-          <button class="btn xs sec" onclick="addCoulsonSet(${gi},${ii},'${item.reps}')">＋ Set</button>
-          ${volLine}
-        </div>
-      </div>`;
-    }).join('');
-    return `<div class="ex-group ${groupClass(g.type)}"><div class="eg-label ${labelClass(g.type)}">${g.label}</div>${itemsHTML}</div>`;
-  }).join('');
-  renderExtras();
-}
-
-function deleteCoulsonItem(gi, ii) { S.session.deletedItems.push(`${gi}-${ii}`); renderCoulsonPrescribed(); toast('Exercise removed'); }
-function deleteMRUTItem(gi, ii) { S.session.deletedItems.push(`${gi}-${ii}`); showMRUTSession(); toast('Exercise removed'); }
-function updateCoulsonSet(gi, ii, si, field, val) { const key = `${gi}-${ii}`; if(coulsonSetData[key] && coulsonSetData[key][si]) coulsonSetData[key][si][field] = val; }
-function addCoulsonSet(gi, ii, defaultReps) { const key = `${gi}-${ii}`; if(!coulsonSetData[key]) coulsonSetData[key] = []; coulsonSetData[key].push({ weight: '', reps: '' }); renderCoulsonPrescribed(); }
-function removeCoulsonSet(gi, ii, si) { const key = `${gi}-${ii}`; if(coulsonSetData[key] && coulsonSetData[key].length > 1) { coulsonSetData[key].splice(si, 1); renderCoulsonPrescribed(); } }
-
-function showMRUTSession() {
-  showPhase('3-mrut');
-  if(!S.session.deletedItems) S.session.deletedItems = [];
-  const plan = S.session.mrutNum === 2 ? COULSON.mrut2 : COULSON.mrut4;
-  document.getElementById('mrut-session-title').textContent = `🔥 ${plan.label}`;
-  document.getElementById('mrut-prescribed').innerHTML = plan.groups.map((g, gi) => {
-    const itemsHTML = g.items.map((item, ii) => {
-      if(S.session.deletedItems.includes(`${gi}-${ii}`)) return '';
-      const sets = ensureSetData(gi, ii, item.sets, item.reps, item.w);
-      const setsHTML = sets.map((set, si) => `
-        <div class="set-row-inp">
-          <span class="sn2">${si + 1}</span>
-          <input type="number" class="wi2" value="${set.weight}" placeholder="${item.w || 'lbs'}" inputmode="decimal" onchange="updateCoulsonSet(${gi},${ii},${si},'weight',this.value)">
-          <span class="xi">×</span>
-          <input type="number" class="ri2" value="${set.reps}" placeholder="${item.reps}" inputmode="decimal" onchange="updateCoulsonSet(${gi},${ii},${si},'reps',this.value)">
-          <button class="rm-s" onclick="removeCoulsonSet(${gi},${ii},${si})">✕</button>
-        </div>`).join('');
-      const vol = sets.reduce((t, s) => t + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0), 0);
-      const volLine = vol > 0 ? `<span class="set-vol">Vol: <strong style="color:var(--blue)">${vol.toLocaleString()} lbs</strong></span>` : '<span class="set-vol" style="color:rgba(255,255,255,0.25);">BW / Timed</span>';
-      return `<div class="ex-row">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <div class="ex-name" style="margin-bottom:0;">${item.name}</div>
-          <button class="btn xs red" onclick="deleteMRUTItem(${gi},${ii})">REMOVE</button>
-        </div>
-        <div class="ex-pres">Prescribed: <strong>${item.pres}</strong>&nbsp;&nbsp;Rest: ${item.rest}</div>
-        <div class="set-rows-wrap">${setsHTML}</div>
-        <div class="add-set-row">
-          <button class="btn xs sec" onclick="addCoulsonSet(${gi},${ii},'${item.reps}')">＋ Set</button>
-          ${volLine}
-        </div>
-      </div>`;
-    }).join('');
-    return `<div class="ex-group ${groupClass(g.type)}"><div class="eg-label ${labelClass(g.type)}">${g.label}</div>${itemsHTML}</div>`;
-  }).join('');
-  renderMRUTExtras();
-}
-
-function renderMRUTExtras() {
-  const list = document.getElementById('mrut-extra-list');
-  const extras = S.session.extras || [];
-  if(!extras.length) { list.innerHTML = ''; return; }
-  list.innerHTML = extras.map((ex, ei) => renderExtraCard(ex, ei, 'mrut')).join('');
-}
-
-// Extras
-function renderExtras() {
-  const list = document.getElementById('extra-list');
-  const extras = S.session ? S.session.extras : [];
-  if(!extras.length) { list.innerHTML = ''; return; }
-  list.innerHTML = extras.map((ex, ei) => renderExtraCard(ex, ei, 'strength')).join('');
-}
-function renderExtraCard(ex, ei, target) {
-  const setsHTML = ex.sets.map((set, si) => `
-    <div class="set-row-inp">
-      <span class="sn2">${si + 1}</span>
-      <input type="number" class="wi2" value="${set.weight || ''}" placeholder="lbs" inputmode="decimal" onchange="updateExtra(${ei},${si},'weight',this.value,'${target}')">
-      <span class="xi">×</span>
-      <input type="number" class="ri2" value="${set.reps || ''}" placeholder="reps" inputmode="decimal" onchange="updateExtra(${ei},${si},'reps',this.value,'${target}')">
-      <button class="rm-s" onclick="removeExtraSet(${ei},${si},'${target}')">✕</button>
-    </div>`).join('');
-  const vol = ex.sets.reduce((t, s) => t + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0), 0);
-  return `<div class="extra-ex">
-    <div class="ex-name" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <span style="font-family:'Oswald',sans-serif;font-size:14px;color:white;letter-spacing:1px;">${ex.name}</span>
-      <button class="btn xs red" onclick="removeExtra(${ei},'${target}')">✕</button>
-    </div>
-    <div class="set-rows-wrap">${setsHTML}</div>
-    <div class="add-set-row">
-      <button class="btn xs sec" onclick="addExtraSet(${ei},'${target}')">＋ Set</button>
-      <span class="set-vol">Vol: <strong style="color:var(--blue)">${vol.toLocaleString()} lbs</strong></span>
-    </div>
-  </div>`;
-}
-function updateExtra(ei, si, field, val, target) { S.session.extras[ei].sets[si][field] = val; }
-function addExtraSet(ei, target) { S.session.extras[ei].sets.push({ weight: '', reps: '' }); target === 'mrut' ? renderMRUTExtras() : renderExtras(); }
-function removeExtraSet(ei, si, target) { S.session.extras[ei].sets.splice(si, 1); target === 'mrut' ? renderMRUTExtras() : renderExtras(); }
-function removeExtra(ei, target) { S.session.extras.splice(ei, 1); target === 'mrut' ? renderMRUTExtras() : renderExtras(); }
-
-// Ex Modal
-function openExModal() { exModalTarget = 'strength'; renderExModal(); }
-function openExModalMRUT() { exModalTarget = 'mrut'; renderExModal(); }
-function renderExModal() {
+// ============ EXTRAS MODAL ============
+function openExModal() { 
   renderCats(); renderExList();
   document.getElementById('cex-input').value = '';
   document.getElementById('ex-modal').classList.add('open');
@@ -487,82 +466,108 @@ function closeExModal() { document.getElementById('ex-modal').classList.remove('
 function renderCats() { document.getElementById('cat-tabs').innerHTML = Object.keys(EXERCISES).map(c => `<div class="ct2 ${c === currentCat ? 'active' : ''}" onclick="setCat('${c}',this)">${c}</div>`).join(''); }
 function setCat(c, el) { currentCat = c; document.querySelectorAll('.ct2').forEach(t => t.classList.remove('active')); el.classList.add('active'); renderExList(); }
 function renderExList() { document.getElementById('ex-list').innerHTML = EXERCISES[currentCat].map(e => `<div class="ex-pill" onclick="addExercise('${e}')">${e}</div>`).join(''); }
-function addCustomEx() { const n = document.getElementById('cex-input').value.trim(); if(!n) { toast('Enter exercise name!'); return; } addExercise(n); }
+function addCustomEx() { const n = document.getElementById('cex-input').value.trim(); if(!n) { toast('Enter name!'); return; } addExercise(n); }
+
 function addExercise(name) {
-  if(!S.session) S.session = { extras: [] };
-  if(!S.session.extras) S.session.extras = [];
-  S.session.extras.push({ name, sets: [{ weight: '', reps: '' }] });
-  closeExModal();
-  if(exModalTarget === 'mrut') renderMRUTExtras(); else renderExtras();
-  toast(`${name} added ✓`);
-}
-
-// Finishing Logic
-function buildCoulsonSetsLog(plan) {
-  const groups = [];
-  const deleted = S.session.deletedItems || [];
-  plan.groups.forEach((g, gi) => {
-    const items = g.items.map((item, ii) => {
-      if(deleted.includes(`${gi}-${ii}`)) return null; 
-      const key = `${gi}-${ii}`;
-      const sets = (coulsonSetData[key] || []).map(s => ({ weight: parseFloat(s.weight) || 0, reps: s.reps || 0 }));
-      return { name: item.name, prescribed: item.pres, sets };
-    }).filter(Boolean);
-    if(items.length) groups.push({ label: g.label, type: g.type, items });
+  // Push a new block to the plan dynamically
+  S.session.blocks.push({
+    id: `extra-${Date.now()}`,
+    type: 'accessory',
+    groupType: 'Extra Exercise',
+    label: name,
+    desc: 'Custom Addition',
+    items: [{ name: name, pres: 'Custom', w: '', r: '' }],
+    totalRounds: 3,
+    defaultRest: 60,
+    logged: [],
+    isExtra: true
   });
-  return groups;
+  save();
+  closeExModal();
+  toast(`${name} added to queue ✓`);
+  // Re-render transition so "Next Up" updates dynamically
+  if(document.getElementById('ph-trans').classList.contains('active')) {
+    renderTransition();
+  }
 }
-function calcTotalCoulsonVol() { let vol = 0; Object.values(coulsonSetData).forEach(sets => sets.forEach(s => vol += (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0))); return vol; }
-function calcExtrasVol(extras) { return (extras || []).reduce((t, ex) => t + ex.sets.reduce((t2, s) => t2 + (parseFloat(s.weight) || 0) * (parseInt(s.reps) || 0), 0), 0); }
 
-function buildSyncModal(entry) {
-  document.getElementById('sync-summary').innerHTML = `
-    <div class="ir2"><span class="il">Session</span><span class="iv" style="color:var(--gold)">${entry.liftDisplay || entry.lift} · ${entry.weekLabel || entry.week}</span></div>
-    <div class="ir2"><span class="il">Total Volume</span><span class="iv" style="color:var(--green)">${Math.round(entry.totalVolume).toLocaleString()} lbs</span></div>
-    ${entry.bestE1rm ? `<div class="ir2"><span class="il">Best e1RM</span><span class="iv" style="color:#93c5fd">${entry.bestE1rm} lbs</span></div>` : ''}
-    ${entry.avgRpe ? `<div class="ir2"><span class="il">Avg RPE</span><span class="iv" style="color:var(--orange)">${entry.avgRpe}</span></div>` : ''}
-    <div class="ir2"><span class="il">Duration</span><span class="iv">${entry.duration} min</span></div>
-    <div class="ir2"><span class="il">Est. Calories</span><span class="iv" style="color:var(--orange)">~${entry.estCals} kcal</span></div>
-  `;
-}
+// ============ FINISH & LOG GENERATION ============
 
 function finishSession() {
-  const sess = S.session;
   const dur = parseInt(document.getElementById('sess-dur').value) || 60;
   const notes = document.getElementById('sess-notes').value.trim();
 
-  const allLifts = [...sess.completedLifts];
-  if(sess.mainSets.length && !allLifts.some(l => l.lift === sess.lift)) {
-    allLifts.push({ lift: sess.lift, liftLabel: sess.liftLabel, tm: sess.tm, mainSets: sess.mainSets });
-  }
-  const allMainSets = allLifts.flatMap(l => l.mainSets);
+  // Extract Main Sets
+  const mainBlocks = S.session.blocks.filter(b => b.type === 'main' && b.logged.length > 0);
+  const allMainSets = mainBlocks.flatMap(b => b.logged.map(l => ({
+    weight: l.w, reps: l.r, rpe: l.rpe, e1rm: l.e1rm, prescribed_w: l.prescribed_w, prescribed_r: l.prescribed_r, amrap: l.amrap
+  })));
 
+  // Format Lift Breakdown for history UI
+  const liftBreakdown = mainBlocks.length > 1 ? mainBlocks.map(b => ({
+    lift: b.lift, liftLabel: LL[b.lift], tm: b.tm, mainSets: b.logged.map(l => ({
+      weight: l.w, reps: l.r, rpe: l.rpe, e1rm: l.e1rm, prescribed_w: l.prescribed_w, prescribed_r: l.prescribed_r, amrap: l.amrap
+    }))
+  })) : null;
+
+  // Extract Accessories & Extras
+  const accBlocks = S.session.blocks.filter(b => b.type === 'accessory' && b.logged.length > 0 && !b.isExtra);
+  const extraBlocks = S.session.blocks.filter(b => b.type === 'accessory' && b.logged.length > 0 && b.isExtra);
+
+  const formatAccs = (blocks) => {
+    return blocks.map(b => {
+      const itemsOut = b.items.map((itemDef, idx) => {
+        const setsOut = b.logged.map(round => ({ weight: round.items[idx].w, reps: round.items[idx].r }));
+        return { name: itemDef.name, prescribed: itemDef.pres, sets: setsOut };
+      });
+      return { label: b.label, type: b.groupType, items: itemsOut };
+    });
+  };
+
+  const coulsonSets = formatAccs(accBlocks);
+  const assistance = formatAccs(extraBlocks).flatMap(b => b.items); // flatten extras slightly to fit legacy UI
+
+  // Calcs
   const mainVol = allMainSets.reduce((t, s) => t + s.weight * s.reps, 0);
-  const coulsonVol = calcTotalCoulsonVol();
-  const extrasVol = calcExtrasVol(sess.extras);
-  const totalVol = mainVol + coulsonVol + extrasVol;
+  let accVol = 0;
+  [...accBlocks, ...extraBlocks].forEach(b => {
+    b.logged.forEach(rnd => rnd.items.forEach(it => accVol += (parseFloat(it.w)||0) * (parseInt(it.r)||0)));
+  });
+
+  const totalVol = mainVol + accVol;
   const bestE1rm = allMainSets.length ? Math.max(...allMainSets.map(s => s.e1rm)) : null;
   const avgRpe = allMainSets.length ? Math.round(allMainSets.reduce((t, s) => t + s.rpe, 0) / allMainSets.length * 10) / 10 : null;
   const topSet = allMainSets.length ? allMainSets.reduce((b, s) => s.weight * s.reps > b.weight * b.reps ? s : b) : null;
 
-  const plan = getCoulsonPlan();
-  const coulsonSets = buildCoulsonSetsLog(plan);
-  const liftDisplay = allLifts.length > 1 ? allLifts.map(l => l.liftLabel).join(' + ') : sess.liftLabel;
+  // Primary label logic
+  let primaryLift = 'Workout';
+  let liftDisplay = 'Workout';
+  if (S.session.sessType === 'strength') {
+    primaryLift = mainBlocks.length ? mainBlocks[0].liftLabel : 'Strength';
+    liftDisplay = mainBlocks.length > 1 ? mainBlocks.map(b => LL[b.lift]).join(' + ') : primaryLift;
+  } else {
+    primaryLift = 'MRUT';
+    liftDisplay = `MRUT Workout ${S.session.mrutNum}`;
+  }
 
   const entry = {
     id: Date.now(),
     date: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
     time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-    type: 'strength',
-    lift: allLifts.length > 1 ? liftDisplay : sess.liftLabel,
+    type: S.session.sessType,
+    lift: primaryLift,
     liftDisplay,
-    week: sess.weekLabel, weekLabel: sess.weekLabel, cycle: sess.cycle, tm: sess.tm,
+    week: S.session.sessType === 'strength' ? `Week ${S.week}` : 'MRUT', 
+    weekLabel: S.session.sessType === 'strength' ? (S.week===4?'Deload':`Week ${S.week}`) : `Workout ${S.mrutNum}`, 
+    cycle: S.cycle, 
+    tm: mainBlocks.length ? mainBlocks[0].tm : null,
     mainSets: allMainSets,
-    liftBreakdown: allLifts.length > 1 ? allLifts : null,
-    coulsonSets, assistance: sess.extras,
+    liftBreakdown,
+    coulsonSets, 
+    assistance,
     schedule: S.schedule,
     totalVolume: totalVol, bestE1rm, avgRpe, topSet,
-    duration: dur, notes, estCals: LCALS[sess.lift] || '300–400',
+    duration: dur, notes, estCals: LCALS[primaryLift.toLowerCase()] || '300–400',
     healthSynced: false, stravaSynced: false
   };
   
@@ -574,26 +579,13 @@ function finishSession() {
   showPhase('0');
 }
 
-function finishMRUT() {
-  const dur = parseInt(document.getElementById('mrut-dur').value) || 45;
-  const notes = document.getElementById('mrut-notes').value.trim();
-  const plan = getCoulsonPlan();
-  const coulsonSets = buildCoulsonSetsLog(plan);
-  const totalVol = calcTotalCoulsonVol() + calcExtrasVol(S.session.extras);
-  
-  const entry = {
-    id: Date.now(),
-    date: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
-    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-    type: 'mrut', lift: 'MRUT', liftDisplay: `MRUT Workout ${S.session.mrutNum}`,
-    week: 'MRUT', weekLabel: `Workout ${S.session.mrutNum}`, cycle: S.cycle,
-    tm: null, mainSets: [], coulsonSets, assistance: S.session.extras || [],
-    totalVolume: totalVol, bestE1rm: null, avgRpe: null,
-    duration: dur, notes, estCals: '300–400', healthSynced: false, stravaSynced: false
-  };
-  
-  S.log.unshift(entry); S.session = null; save();
-  stopSessionClock(); buildSyncModal(entry);
-  document.getElementById('sync-modal').classList.add('open');
-  showPhase('0');
+function buildSyncModal(entry) {
+  document.getElementById('sync-summary').innerHTML = `
+    <div class="ir2"><span class="il">Session</span><span class="iv" style="color:var(--gold)">${entry.liftDisplay || entry.lift} · ${entry.weekLabel || entry.week}</span></div>
+    <div class="ir2"><span class="il">Total Volume</span><span class="iv" style="color:var(--green)">${Math.round(entry.totalVolume).toLocaleString()} lbs</span></div>
+    ${entry.bestE1rm ? `<div class="ir2"><span class="il">Best e1RM</span><span class="iv" style="color:#93c5fd">${entry.bestE1rm} lbs</span></div>` : ''}
+    ${entry.avgRpe ? `<div class="ir2"><span class="il">Avg RPE</span><span class="iv" style="color:var(--orange)">${entry.avgRpe}</span></div>` : ''}
+    <div class="ir2"><span class="il">Duration</span><span class="iv">${entry.duration} min</span></div>
+    <div class="ir2"><span class="il">Est. Calories</span><span class="iv" style="color:var(--orange)">~${entry.estCals} kcal</span></div>
+  `;
 }
