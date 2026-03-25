@@ -92,7 +92,7 @@ function renderSchedulePrescrip(day) {
     const tm2 = S.tms[lift2];
     multi.style.display = 'block';
     multi.innerHTML = `<div class="div"></div>
-      <div style="font-size:11px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Then: ${LL[lift2]} <span style="color:var(--metallic-blue)">TM ${tm2} lbs</span></div>
+      <div style="font-size:11px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Then: ${LL[lift2]} <span style="color:var(--metallicblue)">TM ${tm2} lbs</span></div>
       <table class="stbl"><thead><tr><th>SET</th><th>%TM</th><th>WEIGHT</th><th>REPS</th></tr></thead><tbody>${
         scheme.map((s, i) => { const wt = r5(tm2 * s.p); const rep = s.amrap ? `<span class="sr">${s.r}</span> <span class="amtag">AMRAP</span>` : `<span class="sr">${s.r}</span>`; return `<tr><td class="sp2">Set ${i + 1}</td><td class="sp2">${Math.round(s.p * 100)}%</td><td class="sw">${wt}</td><td>${rep}</td></tr>`; }).join('')
       }</tbody></table>`;
@@ -192,7 +192,7 @@ function renderWarmupChecklist() {
       <div style="width:26px;height:26px;border-radius:50%;border:2px solid ${checks[i] ? 'var(--green)' : 'rgba(255,255,255,0.3)'};background:${checks[i] ? 'var(--green)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;">
         ${checks[i] ? '<span style="color:#1a1a1a;font-weight:700;font-size:14px;">✓</span>' : ''}
       </div>
-      <div style="flex:1;font-size:14px;${checks[i] ? 'text-decoration:line-through;color:var(--metallic-blue);' : ''}">${w.n}</div>
+      <div style="flex:1;font-size:14px;${checks[i] ? 'text-decoration:line-through;color:var(--metallicblue);' : ''}">${w.n}</div>
       <div style="color:var(--orange);font-weight:600;font-size:12px;white-space:nowrap;">${w.r}</div>
     </div>`).join('');
   document.getElementById('wu-prog-txt').textContent = `${done} / ${WARMUP.length}`;
@@ -262,7 +262,7 @@ function renderActiveBlock() {
       <div class="rpe-w">
         <div class="rpe-lr"><span class="rpe-t">RPE (1–10)</span><span class="rpe-v" id="rpe-disp" style="color:var(--green)">6</span></div>
         <input type="range" min="1" max="10" value="6" id="inp-main-rpe" oninput="updateRPE(this.value)">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--metallic-blue);margin-top:3px;"><span>1 Easy</span><span>5 Moderate</span><span>10 Max</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--metallicblue);margin-top:3px;"><span>1 Easy</span><span>5 Moderate</span><span>10 Max</span></div>
       </div>
       <div class="e1rm-b" id="e1rm-live" style="display:none;"><div class="el">Estimated 1RM this set</div><div class="ev" id="e1rm-val">—</div></div>
     `;
@@ -292,7 +292,7 @@ function renderActiveBlock() {
           <div class="alr-name">${item.name} <span class="alr-pres">(${item.pres})</span></div>
           <div class="alr-inputs">
             <div style="flex:1"><label>WEIGHT / BW</label><input type="text" class="wi acc-w" data-idx="${idx}" value="${prevW}" placeholder="lbs"></div>
-            <span style="color:var(--metallic-blue); padding-top:14px;">×</span>
+            <span style="color:var(--metallicblue); padding-top:14px;">×</span>
             <div style="flex:1"><label>REPS / TIME</label><input type="text" class="ri acc-r" data-idx="${idx}" value="${prevR}" placeholder="reps"></div>
           </div>
         </div>
@@ -369,7 +369,7 @@ function renderLoggedSets() {
   const wrap = document.getElementById('logged-sets-wrap');
   if(!block.logged.length) { wrap.innerHTML = ''; return; }
   
-  let html = `<div style="font-size:10px;color:var(--metallic-blue);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">Logged Rounds</div>`;
+  let html = `<div style="font-size:10px;color:var(--metallicblue);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">Logged Rounds</div>`;
   
   if (block.type === 'main') {
     html += block.logged.map((s, i) => {
@@ -380,7 +380,7 @@ function renderLoggedSets() {
   } else if (block.type === 'accessory') {
     html += block.logged.map((rnd, i) => {
       const itemsStr = rnd.items.map(it => `${it.w || 'BW'} × ${it.r}`).join(' &nbsp;|&nbsp; ');
-      return `<div class="ls"><span class="ls-n">${i + 1}</span><span class="ls-d" style="color:var(--metallic-blue)">${itemsStr}</span></div>`;
+      return `<div class="ls"><span class="ls-n">${i + 1}</span><span class="ls-d" style="color:var(--metallicblue)">${itemsStr}</span></div>`;
     }).join('');
   }
 
