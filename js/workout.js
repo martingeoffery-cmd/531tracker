@@ -92,7 +92,7 @@ function renderSchedulePrescrip(day) {
     const tm2 = S.tms[lift2];
     multi.style.display = 'block';
     multi.innerHTML = `<div class="div"></div>
-      <div style="font-size:11px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Then: ${LL[lift2]} <span style="color:var(--slate)">TM ${tm2} lbs</span></div>
+      <div style="font-size:11px;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Then: ${LL[lift2]} <span style="color:var(--metallic-blue)">TM ${tm2} lbs</span></div>
       <table class="stbl"><thead><tr><th>SET</th><th>%TM</th><th>WEIGHT</th><th>REPS</th></tr></thead><tbody>${
         scheme.map((s, i) => { const wt = r5(tm2 * s.p); const rep = s.amrap ? `<span class="sr">${s.r}</span> <span class="amtag">AMRAP</span>` : `<span class="sr">${s.r}</span>`; return `<tr><td class="sp2">Set ${i + 1}</td><td class="sp2">${Math.round(s.p * 100)}%</td><td class="sw">${wt}</td><td>${rep}</td></tr>`; }).join('')
       }</tbody></table>`;
@@ -112,14 +112,12 @@ function updateSchedDayNote() {
 // ============ ENGINE CORE ============
 
 function startSession() {
-  // Build Unified Workout Plan
   const blocks = [];
   
   if (S.sessType === 'strength') {
     const sched = SCHEDULES[S.schedule];
     const lifts = (sched && S.schedule !== 'custom') ? sched.days[S.scheduleDay].lifts : [S.lift];
     
-    // Generate Main Lift Blocks
     lifts.forEach(liftKey => {
       blocks.push({
         id: `main-${liftKey}-${Date.now()}`,
@@ -134,7 +132,6 @@ function startSession() {
       });
     });
 
-    // Generate Accessory Blocks
     const coulsonKey = (sched && S.schedule !== 'custom') ? sched.days[S.scheduleDay].coulson : S.lift;
     const plan = COULSON[coulsonKey] || COULSON.squat;
     plan.groups.forEach((g, idx) => {
@@ -195,7 +192,7 @@ function renderWarmupChecklist() {
       <div style="width:26px;height:26px;border-radius:50%;border:2px solid ${checks[i] ? 'var(--green)' : 'rgba(255,255,255,0.3)'};background:${checks[i] ? 'var(--green)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;">
         ${checks[i] ? '<span style="color:#1a1a1a;font-weight:700;font-size:14px;">✓</span>' : ''}
       </div>
-      <div style="flex:1;font-size:14px;${checks[i] ? 'text-decoration:line-through;color:var(--slate);' : ''}">${w.n}</div>
+      <div style="flex:1;font-size:14px;${checks[i] ? 'text-decoration:line-through;color:var(--metallic-blue);' : ''}">${w.n}</div>
       <div style="color:var(--orange);font-weight:600;font-size:12px;white-space:nowrap;">${w.r}</div>
     </div>`).join('');
   document.getElementById('wu-prog-txt').textContent = `${done} / ${WARMUP.length}`;
@@ -217,8 +214,6 @@ function renderActiveBlock() {
 
   document.getElementById('active-block-title').innerHTML = block.label;
   document.getElementById('active-block-desc').innerHTML = block.desc || block.groupType || '';
-
-  // Render Dots
   document.getElementById('set-dots').innerHTML = Array.from({length: block.totalRounds}, (_, i) => `<div class="dot ${i < currentSet ? 'done' : i === currentSet ? 'cur' : ''}"></div>`).join('');
 
   if(isDone) {
@@ -236,31 +231,38 @@ function renderActiveBlock() {
   const inputsContainer = document.getElementById('dynamic-inputs');
   
   if (block.type === 'main') {
-    // MAIN LIFT UI
     const s = block.scheme[currentSet];
     const pw = r5(block.tm * s.p);
     
     document.getElementById('set-prescrip').style.display = 'block';
     document.getElementById('set-prescrip').innerHTML = `Prescribed: <span>${pw} lbs × ${s.amrap ? s.r + ' (AMRAP)' : s.r}</span>`;
     
+    let defaultW = pw;
+    let defaultR = typeof s.r === 'number' ? s.r : '';
+    if(currentSet > 0) {
+      defaultW = block.logged[currentSet - 1].w;
+      defaultR = block.logged[currentSet - 1].r;
+    }
+
     if(s.amrap) { 
       document.getElementById('amrap-coach').style.display = 'block';
-      let prevReps = block.logged.length ? block.logged[block.logged.length - 1].reps : 5;
+      let prevReps = block.logged.length ? block.logged[block.logged.length - 1].r : 5;
       document.getElementById('amrap-coach-text').innerHTML = `Target <strong>${prevReps > 5 ? prevReps : prevReps + 2}+ reps</strong>. Go for max quality reps.`;
+      defaultR = ''; 
     } else { 
       document.getElementById('amrap-coach').style.display = 'none'; 
     }
 
     inputsContainer.innerHTML = `
       <div class="si-grid">
-        <div class="si-box"><label>WEIGHT (lbs)</label><input type="number" class="wi" id="inp-main-w" inputmode="decimal" value="${pw}"></div>
-        <div class="si-box"><label>REPS</label><input type="number" class="ri" id="inp-main-r" inputmode="decimal" value="${typeof s.r === 'number' ? s.r : ''}"></div>
+        <div class="si-box"><label>WEIGHT (lbs)</label><input type="number" class="wi" id="inp-main-w" inputmode="decimal" value="${defaultW}"></div>
+        <div class="si-box"><label>REPS</label><input type="number" class="ri" id="inp-main-r" inputmode="decimal" value="${defaultR}"></div>
         <div class="si-box"><label>REST (min)</label><input type="number" id="inp-main-rest" inputmode="decimal" value="3"></div>
       </div>
       <div class="rpe-w">
         <div class="rpe-lr"><span class="rpe-t">RPE (1–10)</span><span class="rpe-v" id="rpe-disp" style="color:var(--green)">6</span></div>
         <input type="range" min="1" max="10" value="6" id="inp-main-rpe" oninput="updateRPE(this.value)">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--slate);margin-top:3px;"><span>1 Easy</span><span>5 Moderate</span><span>10 Max</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--metallic-blue);margin-top:3px;"><span>1 Easy</span><span>5 Moderate</span><span>10 Max</span></div>
       </div>
       <div class="e1rm-b" id="e1rm-live" style="display:none;"><div class="el">Estimated 1RM this set</div><div class="ev" id="e1rm-val">—</div></div>
     `;
@@ -278,7 +280,6 @@ function renderActiveBlock() {
     });
 
   } else if (block.type === 'accessory') {
-    // ACCESSORY UI
     document.getElementById('set-prescrip').style.display = 'none';
     document.getElementById('amrap-coach').style.display = 'none';
 
@@ -291,7 +292,7 @@ function renderActiveBlock() {
           <div class="alr-name">${item.name} <span class="alr-pres">(${item.pres})</span></div>
           <div class="alr-inputs">
             <div style="flex:1"><label>WEIGHT / BW</label><input type="text" class="wi acc-w" data-idx="${idx}" value="${prevW}" placeholder="lbs"></div>
-            <span style="color:var(--slate); padding-top:14px;">×</span>
+            <span style="color:var(--metallic-blue); padding-top:14px;">×</span>
             <div style="flex:1"><label>REPS / TIME</label><input type="text" class="ri acc-r" data-idx="${idx}" value="${prevR}" placeholder="reps"></div>
           </div>
         </div>
@@ -339,11 +340,12 @@ function logActiveBlock() {
     block.items.forEach((item, idx) => {
       const wVal = ws[idx].value.trim();
       const rVal = rs[idx].value.trim();
-      if(!wVal || !rVal) isValid = false;
+      // Allow weight to be blank (for bodyweight exercises), only demand reps/time
+      if(!rVal) isValid = false; 
       roundItems.push({ w: wVal, r: rVal });
     });
 
-    if(!isValid) { toast('Fill all fields for this round!'); return; }
+    if(!isValid) { toast('Enter reps or time for all exercises!'); return; }
     block.logged.push({ items: roundItems, rest: restTime });
   }
 
@@ -353,13 +355,11 @@ function logActiveBlock() {
   if(block.logged.length < block.totalRounds) {
     toast(`Round ${block.logged.length} logged ✓`);
     document.getElementById('set-logger').style.display = 'none';
-    startRestTimer(restTime / 60); // timer uses mins, passing secs/60 handles it
+    startRestTimer(restTime / 60); 
   } else {
     document.getElementById('set-logger').style.display = 'none';
     document.getElementById('set-dots').innerHTML = Array.from({length: block.totalRounds}, () => `<div class="dot done"></div>`).join('');
     document.getElementById('done-main-btn').style.display = 'block';
-    
-    // Optional: Pop timer even after last set of block to rest before next block
     startRestTimer(restTime / 60);
   }
 }
@@ -369,7 +369,7 @@ function renderLoggedSets() {
   const wrap = document.getElementById('logged-sets-wrap');
   if(!block.logged.length) { wrap.innerHTML = ''; return; }
   
-  let html = `<div style="font-size:10px;color:var(--slate);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">Logged Rounds</div>`;
+  let html = `<div style="font-size:10px;color:var(--metallic-blue);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">Logged Rounds</div>`;
   
   if (block.type === 'main') {
     html += block.logged.map((s, i) => {
@@ -379,8 +379,8 @@ function renderLoggedSets() {
     }).join('');
   } else if (block.type === 'accessory') {
     html += block.logged.map((rnd, i) => {
-      const itemsStr = rnd.items.map(it => `${it.w} × ${it.r}`).join(' &nbsp;|&nbsp; ');
-      return `<div class="ls"><span class="ls-n">${i + 1}</span><span class="ls-d" style="color:var(--slate)">${itemsStr}</span></div>`;
+      const itemsStr = rnd.items.map(it => `${it.w || 'BW'} × ${it.r}`).join(' &nbsp;|&nbsp; ');
+      return `<div class="ls"><span class="ls-n">${i + 1}</span><span class="ls-d" style="color:var(--metallic-blue)">${itemsStr}</span></div>`;
     }).join('');
   }
 
@@ -389,10 +389,7 @@ function renderLoggedSets() {
 
 // ============ BLOCK TRANSITIONS ============
 
-function finishActiveBlock() {
-  save();
-  renderTransition();
-}
+function finishActiveBlock() { save(); renderTransition(); }
 
 function renderTransition() {
   const currentBlock = S.session.blocks[S.session.currentBlockIdx];
@@ -400,7 +397,6 @@ function renderTransition() {
 
   document.getElementById('lt-done-label').textContent = `${currentBlock.label.toUpperCase()} COMPLETE`;
   
-  // Calculate Stats for Completed Block
   let statsHtml = '';
   if (currentBlock.type === 'main') {
     const bestE1rm = currentBlock.logged.length ? Math.max(...currentBlock.logged.map(s => s.e1rm)) : null;
@@ -416,7 +412,6 @@ function renderTransition() {
   }
   document.getElementById('lt-stats').innerHTML = statsHtml;
 
-  // Next Area logic
   if (nextBlock) {
     document.getElementById('trans-next-area').style.display = 'block';
     document.getElementById('trans-finish-area').style.display = 'none';
@@ -431,22 +426,17 @@ function renderTransition() {
 
 function startNextBlock() {
   S.session.currentBlockIdx++;
-  save();
-  showPhase('2');
-  renderActiveBlock();
+  save(); showPhase('2'); renderActiveBlock();
 }
 
 function skipNextBlock() {
   if(confirm("Skip the next block entirely?")) {
     S.session.currentBlockIdx++;
-    save();
-    renderTransition(); // Re-render transition to check if there's another block or if we are done
+    save(); renderTransition();
   }
 }
 
-function gotoFinish() {
-  showPhase('-finish');
-}
+function gotoFinish() { showPhase('-finish'); }
 
 function cancelSession() { 
   if(confirm("Discard this entire workout?")) {
@@ -469,7 +459,6 @@ function renderExList() { document.getElementById('ex-list').innerHTML = EXERCIS
 function addCustomEx() { const n = document.getElementById('cex-input').value.trim(); if(!n) { toast('Enter name!'); return; } addExercise(n); }
 
 function addExercise(name) {
-  // Push a new block to the plan dynamically
   S.session.blocks.push({
     id: `extra-${Date.now()}`,
     type: 'accessory',
@@ -482,13 +471,8 @@ function addExercise(name) {
     logged: [],
     isExtra: true
   });
-  save();
-  closeExModal();
-  toast(`${name} added to queue ✓`);
-  // Re-render transition so "Next Up" updates dynamically
-  if(document.getElementById('ph-trans').classList.contains('active')) {
-    renderTransition();
-  }
+  save(); closeExModal(); toast(`${name} added to queue ✓`);
+  if(document.getElementById('ph-trans').classList.contains('active')) renderTransition();
 }
 
 // ============ FINISH & LOG GENERATION ============
@@ -497,20 +481,17 @@ function finishSession() {
   const dur = parseInt(document.getElementById('sess-dur').value) || 60;
   const notes = document.getElementById('sess-notes').value.trim();
 
-  // Extract Main Sets
   const mainBlocks = S.session.blocks.filter(b => b.type === 'main' && b.logged.length > 0);
   const allMainSets = mainBlocks.flatMap(b => b.logged.map(l => ({
     weight: l.w, reps: l.r, rpe: l.rpe, e1rm: l.e1rm, prescribed_w: l.prescribed_w, prescribed_r: l.prescribed_r, amrap: l.amrap
   })));
 
-  // Format Lift Breakdown for history UI
   const liftBreakdown = mainBlocks.length > 1 ? mainBlocks.map(b => ({
     lift: b.lift, liftLabel: LL[b.lift], tm: b.tm, mainSets: b.logged.map(l => ({
       weight: l.w, reps: l.r, rpe: l.rpe, e1rm: l.e1rm, prescribed_w: l.prescribed_w, prescribed_r: l.prescribed_r, amrap: l.amrap
     }))
   })) : null;
 
-  // Extract Accessories & Extras
   const accBlocks = S.session.blocks.filter(b => b.type === 'accessory' && b.logged.length > 0 && !b.isExtra);
   const extraBlocks = S.session.blocks.filter(b => b.type === 'accessory' && b.logged.length > 0 && b.isExtra);
 
@@ -525,9 +506,8 @@ function finishSession() {
   };
 
   const coulsonSets = formatAccs(accBlocks);
-  const assistance = formatAccs(extraBlocks).flatMap(b => b.items); // flatten extras slightly to fit legacy UI
+  const assistance = formatAccs(extraBlocks).flatMap(b => b.items); 
 
-  // Calcs
   const mainVol = allMainSets.reduce((t, s) => t + s.weight * s.reps, 0);
   let accVol = 0;
   [...accBlocks, ...extraBlocks].forEach(b => {
@@ -539,14 +519,23 @@ function finishSession() {
   const avgRpe = allMainSets.length ? Math.round(allMainSets.reduce((t, s) => t + s.rpe, 0) / allMainSets.length * 10) / 10 : null;
   const topSet = allMainSets.length ? allMainSets.reduce((b, s) => s.weight * s.reps > b.weight * b.reps ? s : b) : null;
 
-  // Primary label logic
-  let primaryLift = 'Workout';
+  // SAFE LIFT EXTRACTION (Fixed Crash Issue)
+  let primaryLiftKey = 'workout';
+  let primaryLiftName = 'Workout';
   let liftDisplay = 'Workout';
+
   if (S.session.sessType === 'strength') {
-    primaryLift = mainBlocks.length ? mainBlocks[0].liftLabel : 'Strength';
-    liftDisplay = mainBlocks.length > 1 ? mainBlocks.map(b => LL[b.lift]).join(' + ') : primaryLift;
+    if (mainBlocks.length > 0) {
+      primaryLiftKey = mainBlocks[0].lift; 
+      primaryLiftName = LL[primaryLiftKey]; 
+      liftDisplay = mainBlocks.length > 1 ? mainBlocks.map(b => LL[b.lift]).join(' + ') : primaryLiftName;
+    } else {
+      primaryLiftName = 'Strength';
+      liftDisplay = 'Strength';
+    }
   } else {
-    primaryLift = 'MRUT';
+    primaryLiftKey = 'mrut';
+    primaryLiftName = 'MRUT';
     liftDisplay = `MRUT Workout ${S.session.mrutNum}`;
   }
 
@@ -555,8 +544,8 @@ function finishSession() {
     date: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
     time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
     type: S.session.sessType,
-    lift: primaryLift,
-    liftDisplay,
+    lift: primaryLiftName,
+    liftDisplay: liftDisplay,
     week: S.session.sessType === 'strength' ? `Week ${S.week}` : 'MRUT', 
     weekLabel: S.session.sessType === 'strength' ? (S.week===4?'Deload':`Week ${S.week}`) : `Workout ${S.mrutNum}`, 
     cycle: S.cycle, 
@@ -567,7 +556,7 @@ function finishSession() {
     assistance,
     schedule: S.schedule,
     totalVolume: totalVol, bestE1rm, avgRpe, topSet,
-    duration: dur, notes, estCals: LCALS[primaryLift.toLowerCase()] || '300–400',
+    duration: dur, notes, estCals: LCALS[primaryLiftKey] || '300–400',
     healthSynced: false, stravaSynced: false
   };
   
