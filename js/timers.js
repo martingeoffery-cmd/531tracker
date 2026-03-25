@@ -75,14 +75,14 @@ function onRestComplete() {
   if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
   setTimeout(() => {
     document.getElementById('rest-timer').style.display = 'none';
-    renderMainLiftUI();
+    renderActiveBlock(); // <-- FIXED HERE
   }, 2000);
 }
 
 function skipRest() {
   if(_restTimer) { clearInterval(_restTimer); _restTimer = null; }
   document.getElementById('rest-timer').style.display = 'none';
-  renderMainLiftUI();
+  renderActiveBlock(); // <-- FIXED HERE
 }
 
 function addRestTime(seconds) {
