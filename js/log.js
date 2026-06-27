@@ -110,8 +110,27 @@ function openEditLog(id) {
   _editId = id;
   document.getElementById('edit-modal-sub').textContent = `${entry.liftDisplay || entry.lift} · ${entry.weekLabel || entry.week}`;
 
-  const setsToEdit = entry.mainSets || [];
-  const setsHTML = setsToEdit.length ? `
+  const hasLiftBreakdown = entry.liftBreakdown && entry.liftBreakdown.length > 1;
+  const setsToEdit = hasLiftBreakdown ? entry.liftBreakdown.flatMap(lb => lb.mainSets || []) : (entry.mainSets || []);
+  const setsHTML = hasLiftBreakdown ? `
+    <div style="font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Main Sets</div>
+    ${entry.liftBreakdown.map((lb, li) => `
+      <div style="font-size:12px;color:#93c5fd;margin:8px 0 6px;">${lb.liftLabel} — TM ${lb.tm} lbs</div>
+      ${(lb.mainSets || []).map((s, si) => `
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:7px;">
+        <span style="font-size:11px;color:var(--slate);width:18px;">${si + 1}</span>
+        <input type="number" id="es-w-${li}-${si}" value="${s.weight}" placeholder="lbs" inputmode="decimal"
+          style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.2);border-radius:5px;color:var(--green);font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;padding:8px 6px;width:75px;text-align:center;-webkit-appearance:none;">
+        <span style="color:var(--slate);font-size:12px;">×</span>
+        <input type="number" id="es-r-${li}-${si}" value="${s.reps}" placeholder="reps" inputmode="decimal"
+          style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.2);border-radius:5px;color:var(--orange);font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;padding:8px 6px;width:60px;text-align:center;-webkit-appearance:none;">
+        <input type="number" id="es-rpe-${li}-${si}" value="${s.rpe || 6}" min="1" max="10" placeholder="RPE" inputmode="decimal"
+          style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.2);border-radius:5px;color:var(--slate);font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;padding:8px 4px;width:50px;text-align:center;-webkit-appearance:none;">
+        <button onclick="removeEditSet(${li},${si})" style="background:none;border:none;color:rgba(239,68,68,0.5);font-size:16px;cursor:pointer;padding:4px;">✕</button>
+      </div>`).join('')}
+      <button onclick="addEditSet(${li})" class="btn xs sec" style="margin-bottom:8px;">＋ Add ${lb.liftLabel} Set</button>
+    `).join('')}
+    <div class="div"></div>` : setsToEdit.length ? `
     <div style="font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Main Sets</div>
     ${setsToEdit.map((s, i) => `
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:7px;">
@@ -144,17 +163,30 @@ function openEditLog(id) {
   document.getElementById('edit-modal').classList.add('open');
 }
 
-function removeEditSet(i) {
+function removeEditSet(i, setIdx) {
   const entry = S.log.find(e => e.id === _editId);
   if(!entry) return;
-  entry.mainSets.splice(i, 1);
+  if(entry.liftBreakdown && entry.liftBreakdown.length > 1) {
+    const lb = entry.liftBreakdown[i];
+    if(lb) lb.mainSets.splice(setIdx, 1);
+    entry.mainSets = entry.liftBreakdown.flatMap(l => l.mainSets || []);
+  } else {
+    entry.mainSets.splice(i, 1);
+  }
   openEditLog(_editId);
 }
 
-function addEditSet() {
+function addEditSet(liftIdx = 0) {
   const entry = S.log.find(e => e.id === _editId);
   if(!entry) return;
-  entry.mainSets.push({ weight: 0, reps: 0, rpe: 7, e1rm: 0, prescribed_w: 0, prescribed_r: 0, pct: 0, amrap: false });
+  const newSet = { weight: 0, reps: 0, rpe: 7, e1rm: 0, prescribed_w: 0, prescribed_r: 0, pct: 0, amrap: false };
+  if(entry.liftBreakdown && entry.liftBreakdown.length > 1) {
+    const lb = entry.liftBreakdown[liftIdx];
+    if(lb) lb.mainSets.push(newSet);
+    entry.mainSets = entry.liftBreakdown.flatMap(l => l.mainSets || []);
+  } else {
+    entry.mainSets.push(newSet);
+  }
   openEditLog(_editId);
 }
 
@@ -162,24 +194,36 @@ function saveEditLog() {
   const entry = S.log.find(e => e.id === _editId);
   if(!entry) { closeEditModal(); return; }
 
-  const n = entry.mainSets.length;
-  const updatedSets = [];
-  for(let i = 0; i < n; i++) {
-    const wEl = document.getElementById(`es-w-${i}`);
-    const rEl = document.getElementById(`es-r-${i}`);
-    const rpeEl = document.getElementById(`es-rpe-${i}`);
-    if(!wEl) continue;
-    const w = parseFloat(wEl.value) || 0;
-    const reps = parseInt(rEl.value) || 0;
-    const rpe = parseInt(rpeEl.value) || 6;
-    const e1rm = reps === 1 ? w : Math.round(Math.round(w * (1 + reps / 30) / 5) * 5);
-    updatedSets.push({ ...entry.mainSets[i], weight: w, reps, rpe, e1rm });
+  if(entry.liftBreakdown && entry.liftBreakdown.length > 1) {
+    entry.liftBreakdown.forEach((lb, li) => {
+      lb.mainSets = (lb.mainSets || []).map((set, si) => {
+        const w = parseFloat(document.getElementById(`es-w-${li}-${si}`)?.value) || 0;
+        const reps = parseInt(document.getElementById(`es-r-${li}-${si}`)?.value) || 0;
+        const rpe = parseInt(document.getElementById(`es-rpe-${li}-${si}`)?.value) || 6;
+        const e1rm = reps === 1 ? w : Math.round(Math.round(w * (1 + reps / 30) / 5) * 5);
+        return { ...set, weight: w, reps, rpe, e1rm };
+      });
+    });
+    entry.mainSets = entry.liftBreakdown.flatMap(l => l.mainSets || []);
+  } else {
+    const n = entry.mainSets.length;
+    const updatedSets = [];
+    for(let i = 0; i < n; i++) {
+      const wEl = document.getElementById(`es-w-${i}`);
+      const rEl = document.getElementById(`es-r-${i}`);
+      const rpeEl = document.getElementById(`es-rpe-${i}`);
+      if(!wEl) continue;
+      const w = parseFloat(wEl.value) || 0;
+      const reps = parseInt(rEl.value) || 0;
+      const rpe = parseInt(rpeEl.value) || 6;
+      const e1rm = reps === 1 ? w : Math.round(Math.round(w * (1 + reps / 30) / 5) * 5);
+      updatedSets.push({ ...entry.mainSets[i], weight: w, reps, rpe, e1rm });
+    }
+    entry.mainSets = updatedSets;
+    if(entry.liftBreakdown && entry.liftBreakdown.length > 0) entry.liftBreakdown[0].mainSets = updatedSets;
   }
-  entry.mainSets = updatedSets;
 
-  if(entry.liftBreakdown && entry.liftBreakdown.length > 0) entry.liftBreakdown[0].mainSets = updatedSets;
-
-  const allSets = entry.liftBreakdown ? entry.liftBreakdown.flatMap(l => l.mainSets) : updatedSets;
+  const allSets = entry.liftBreakdown ? entry.liftBreakdown.flatMap(l => l.mainSets || []) : entry.mainSets;
     
   const mainVol = allSets.reduce((t, s) => t + s.weight * s.reps, 0);
   const coulsonVol = (entry.coulsonSets || []).reduce((t, g) =>
