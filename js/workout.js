@@ -5,17 +5,19 @@ let currentCat = 'Push';
 function setSessType(type, el) {
   S.sessType = type;
   document.querySelectorAll('.sess-type-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
+  if(el) el.classList.add('active');
   document.getElementById('strength-opts').style.display = type === 'strength' ? 'block' : 'none';
   document.getElementById('mrut-opts').style.display = type === 'mrut' ? 'block' : 'none';
+  save();
 }
 function setMRUT(num, el) {
   S.mrutNum = num;
   document.querySelectorAll('.mrut-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
+  if(el) el.classList.add('active');
+  save();
 }
-function setWeek(w, el) { S.week = w; document.querySelectorAll('.wt').forEach(t => t.classList.remove('active')); el.classList.add('active'); renderScheduleUI(); }
-function setLift(l, el) { S.lift = l; document.querySelectorAll('.lc').forEach(c => c.classList.remove('active')); el.classList.add('active'); renderPrescrip(); }
+function setWeek(w, el) { S.week = w; document.querySelectorAll('.wt').forEach(t => t.classList.remove('active')); if(el) el.classList.add('active'); save(); renderScheduleUI(); }
+function setLift(l, el) { S.lift = l; document.querySelectorAll('.lc').forEach(c => c.classList.remove('active')); if(el) el.classList.add('active'); save(); renderPrescrip(); }
 
 function renderPrescrip() {
   const tm = S.tms[S.lift];
@@ -167,11 +169,13 @@ function startSession() {
 
   S.session = {
     sessType: S.sessType,
+    mrutNum: S.mrutNum,
     blocks: blocks,
     currentBlockIdx: 0,
     startTime: Date.now()
   };
 
+  save();
   showPhase('1');
   startSessionClock();
   renderWarmupChecklist();
@@ -201,14 +205,16 @@ function renderWarmupChecklist() {
   btn.style.opacity = (done === WARMUP.length) ? '1' : '0.4';
   btn.style.pointerEvents = (done === WARMUP.length) ? 'auto' : 'none';
 }
-function toggleWU(i) { S.session.warmupChecks[i] = !S.session.warmupChecks[i]; renderWarmupChecklist(); }
-function warmupDone() { showPhase('2'); renderActiveBlock(); }
-function warmupSkip() { showPhase('2'); renderActiveBlock(); }
+function toggleWU(i) { S.session.warmupChecks[i] = !S.session.warmupChecks[i]; save(); renderWarmupChecklist(); }
+function warmupDone() { save(); showPhase('2'); renderActiveBlock(); }
+function warmupSkip() { save(); showPhase('2'); renderActiveBlock(); }
 
 // ============ UNIFIED LOGGER ============
 
 function renderActiveBlock() {
+  if(!S.session) { showPhase('0'); return; }
   const block = S.session.blocks[S.session.currentBlockIdx];
+  if(!block) { gotoFinish(); return; }
   const currentSet = block.logged.length;
   const isDone = currentSet >= block.totalRounds;
 
@@ -436,11 +442,11 @@ function skipNextBlock() {
   }
 }
 
-function gotoFinish() { showPhase('-finish'); }
+function gotoFinish() { save(); showPhase('-finish'); }
 
 function cancelSession() { 
   if(confirm("Discard this entire workout?")) {
-    S.session = null; showPhase('0'); stopSessionClock(); 
+    S.session = null; save(); showPhase('0'); stopSessionClock(); 
     if(_restTimer) { clearInterval(_restTimer); _restTimer = null; } 
     document.getElementById('rest-timer').style.display = 'none'; 
   }
