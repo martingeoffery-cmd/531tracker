@@ -257,16 +257,79 @@
 
   </div>
 
-  <!-- OTHER TABS (Log, Recovery, Settings) remain identical -->
-  <!-- ... INCLUDE REST OF ORIGINAL FILE'S TABS HERE ... -->
-  
-  <!-- BOILERPLATE FOR RECOVERY, SETTINGS, LOG TO PREVENT CLUTTER IN INSTRUCTION -->
   <div class="sc" id="sc-log"><div class="card"><div class="ct">Progress Overview</div><div class="sg" id="log-overview"></div></div><div class="card" id="trend-card" style="display:none;"><div class="ct">Strength Trend</div><div class="ir"><label>Lift</label><select id="trend-sel" onchange="renderTrend()"><option value="Squat">Squat</option><option value="Bench Press">Bench Press</option><option value="Deadlift">Deadlift</option><option value="Standing Press">Standing Press</option></select></div><div id="trend-content"></div></div><div class="card"><div class="ct">Workout History</div><div id="log-list"></div></div></div>
+
+  <!-- ===== RECOVERY TAB ===== -->
+  <div class="sc" id="sc-recovery">
+    <div class="card">
+      <div class="ct gr">Recovery Readiness</div>
+      <p style="font-size:12px;color:var(--slate);margin-bottom:12px;">Track simple recovery signals and get a training recommendation before your session.</p>
+      <div class="sg t3">
+        <div class="metric-box" id="mb-hrv"><div class="metric-icon">💓</div><div class="metric-label">HRV</div><input class="metric-inp" id="met-hrv" type="number" inputmode="decimal" placeholder="ms"><div class="metric-unit">ms</div><div class="metric-ref">7d avg: <span id="hrv-avg">—</span></div></div>
+        <div class="metric-box" id="mb-rhr"><div class="metric-icon">❤️</div><div class="metric-label">Rest HR</div><input class="metric-inp" id="met-rhr" type="number" inputmode="decimal" placeholder="bpm"><div class="metric-unit">bpm</div><div class="metric-ref">7d avg: <span id="rhr-avg">—</span></div></div>
+        <div class="metric-box" id="mb-sleep"><div class="metric-icon">🌙</div><div class="metric-label">Sleep</div><input class="metric-inp" id="met-sleep" type="number" inputmode="decimal" placeholder="hrs"><div class="metric-unit">hours</div></div>
+      </div>
+      <div class="sg t3">
+        <div class="metric-box" id="mb-energy"><div class="metric-icon">⚡</div><div class="metric-label">Energy</div><input class="metric-inp" id="met-energy" type="number" min="1" max="10" inputmode="numeric" placeholder="1-10"><div class="metric-unit">higher is better</div></div>
+        <div class="metric-box" id="mb-soreness"><div class="metric-icon">🦵</div><div class="metric-label">Soreness</div><input class="metric-inp" id="met-soreness" type="number" min="1" max="10" inputmode="numeric" placeholder="1-10"><div class="metric-unit">lower is better</div></div>
+        <div class="metric-box" id="mb-stress"><div class="metric-icon">🧠</div><div class="metric-label">Stress</div><input class="metric-inp" id="met-stress" type="number" min="1" max="10" inputmode="numeric" placeholder="1-10"><div class="metric-unit">lower is better</div></div>
+      </div>
+      <button class="btn grn" onclick="calcReadiness()">CALCULATE READINESS</button>
+    </div>
+    <div class="card">
+      <div class="ct bl">Readiness Result</div>
+      <div class="rec-box" id="readiness-ring">
+        <div class="rec-icon"><span id="readiness-score">—</span></div>
+        <div class="rec-title" id="readiness-label">ENTER METRICS</div>
+        <div class="rec-detail" id="readiness-rec">Add any recovery data you have, then calculate readiness.</div>
+      </div>
+      <div id="readiness-breakdown" style="display:none;margin-top:12px;">
+        <div class="div"></div>
+        <div id="breakdown-content"></div>
+        <div id="training-rec-box"></div>
+      </div>
+    </div>
+    <div class="card" id="metric-history-card" style="display:none;">
+      <div class="ct">Recovery History</div>
+      <div id="metric-trend"></div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS TAB ===== -->
+  <div class="sc" id="sc-settings">
+    <div class="card">
+      <div class="ct">Training Maxes</div>
+      <div class="ir"><label>Squat TM (lbs)</label><input type="number" id="s-tms" inputmode="decimal"></div>
+      <div class="ir"><label>Bench Press TM (lbs)</label><input type="number" id="s-tmb" inputmode="decimal"></div>
+      <div class="ir"><label>Deadlift TM (lbs)</label><input type="number" id="s-tmd" inputmode="decimal"></div>
+      <div class="ir"><label>Standing Press TM (lbs)</label><input type="number" id="s-tmp" inputmode="decimal"></div>
+      <div class="ir"><label>Current Cycle</label><input type="number" id="s-cyc" min="1" inputmode="numeric"></div>
+      <button class="btn" onclick="saveSettingsTMs()">SAVE SETTINGS</button>
+      <button class="btn grn" onclick="advanceCycleSettings()" style="margin-top:6px;">ADVANCE CYCLE</button>
+      <div class="tmg" id="s-tm-disp" style="margin-top:12px;"></div>
+    </div>
+    <div class="card">
+      <div class="ct bl">Training Schedule</div>
+      <div class="sched-grid" id="sched-grid"></div>
+      <div class="sched-note" id="settings-sched-desc"></div>
+    </div>
+    <div class="card">
+      <div class="ct pk">Shortcuts Sync</div>
+      <div class="ir2"><span class="il">Current Shortcut</span><span class="iv" id="disp-sn">5/3/1 Log Workout</span></div>
+      <div class="sn-row" style="margin-top:10px;">
+        <input type="text" id="sn-input" placeholder="Shortcut name">
+        <button class="btn sm" onclick="saveSN()">SAVE</button>
+      </div>
+      <button class="btn sec" onclick="testSC()" style="margin-top:8px;">TEST SHORTCUT</button>
+    </div>
+    <button class="btn red" onclick="resetAll()">RESET ALL DATA</button>
+  </div>
 
   <nav class="nav">
     <button class="nb active" onclick="showSc('calc',this)"><span class="ic">🔢</span>CALC</button>
     <button class="nb" onclick="showSc('workout',this)"><span class="ic">🏋️</span>WORKOUT</button>
     <button class="nb" onclick="showSc('log',this)"><span class="ic">📊</span>LOG</button>
+    <button class="nb" onclick="showSc('recovery',this)"><span class="ic">💓</span>RECOVERY</button>
     <button class="nb" onclick="showSc('settings',this)"><span class="ic">⚙️</span>SETTINGS</button>
   </nav>
 
@@ -276,6 +339,7 @@
   <script src="js/timers.js"></script>
   <script src="js/workout.js"></script>
   <script src="js/log.js"></script>
+  <script src="js/recovery.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/app.js"></script>
 </body>
